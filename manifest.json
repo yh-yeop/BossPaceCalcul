@@ -1,0 +1,15 @@
+{
+  "name": "배율 페이스 계산기",
+  "short_name": "배율계산기",
+  "description": "보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#150F1E",
+  "theme_color": "#150F1E",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

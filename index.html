@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>배율 페이스 계산기</title>
+<meta name="description" content="보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다." />
+<meta name="theme-color" content="#150F1E" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">20분 기준 · 보스 페이스</p>
+    <h1>배율 대비 <em>내 컨트롤</em>은<br>몇 퍼센트인가</h1>
+    <p class="sub">배율은 20분 동안 뽑아야 할 이상적인 딜량(%)입니다. 실제 기록을 넣으면 그 이상치를 얼마나 따라갔는지, 그리고 어느 배율까지 20분 컷이 되는지 나옵니다.</p>
+  </header>
+
+  <!-- 1. 내 기록 -->
+  <section class="card" aria-labelledby="recTitle">
+    <h2 class="card-title" id="recTitle"><span>01</span>내 기록</h2>
+
+    <div class="field" id="presetPickRow" hidden>
+      <label>보스 프리셋</label>
+      <div class="chips" id="presetChips"></div>
+    </div>
+
+    <div class="field">
+      <label for="boss">보스 이름 <span class="hint">— 선택, 공유 이미지에 표시</span></label>
+      <input type="text" id="boss" maxlength="24" placeholder="예) 하드 세렌" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="ratio">배율 <span class="hint">— 20분 기준 이상적 %</span></label>
+      <input type="number" id="ratio" value="184.6" step="0.1" min="0" inputmode="decimal" />
+    </div>
+
+    <div class="field">
+      <label>결과</label>
+      <div class="seg" role="group" aria-label="결과 종류">
+        <button type="button" class="clear" id="modeClear" aria-pressed="true">잡음</button>
+        <button type="button" class="fail" id="modeFail" aria-pressed="false">못 잡음</button>
+      </div>
+    </div>
+
+    <div class="field" id="clearInputs">
+      <label for="clearMin">클리어 타임 <span class="hint">— 분 : 초</span></label>
+      <div class="time-row">
+        <input type="number" id="clearMin" value="13" min="0" max="20" inputmode="numeric" aria-label="분" />
+        <span class="colon">:</span>
+        <input type="number" id="clearSec" value="0" min="0" max="59" inputmode="numeric" aria-label="초" />
+      </div>
+    </div>
+
+    <div class="field" id="failInputs" hidden>
+      <label for="hpLeft">20분 끝났을 때 남은 hp <span class="hint">— %</span></label>
+      <input type="number" id="hpLeft" value="24.7" step="0.1" min="0" max="100" inputmode="decimal" />
+    </div>
+
+    <div class="track-block">
+      <div class="track-head"><span>00:00</span><span>20:00</span></div>
+      <div class="track" id="track">
+        <div class="fill" id="fill"></div>
+        <div class="ideal" id="idealMark"></div>
+      </div>
+      <div class="track-legend">
+        <span><i style="background:var(--violet)"></i>내 진행</span>
+        <span><i style="background:var(--gold)"></i>배율대로 뽑았다면 100% 지점</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <h3>배율 대비 컨트롤</h3>
+      <p class="big" id="ctrlPct">—</p>
+      <p class="note" id="ctrlNote"></p>
+    </div>
+    <div class="stat gold">
+      <h3>20분 컷 최소 배율</h3>
+      <p class="big" id="minRatio">—</p>
+      <p class="note">이 컨트롤을 유지할 때 20분 안에 잡으려면 필요한 배율</p>
+    </div>
+  </div>
+
+  <div class="verdict" id="verdict"></div>
+
+  <div class="share-bar">
+    <button type="button" class="btn" id="copyLink">링크 복사</button>
+    <button type="button" class="btn" id="saveImage">결과 이미지 저장</button>
+  </div>
+
+  <!-- 2. 역계산 -->
+  <section class="card" aria-labelledby="goalTitle">
+    <h2 class="card-title" id="goalTitle"><span>02</span>목표 계산</h2>
+
+    <div class="field">
+      <label for="ctrlIn">기준 컨트롤 <span class="hint">— %, 기본값은 위 기록</span></label>
+      <div class="inline">
+        <input type="number" id="ctrlIn" step="0.1" min="0" inputmode="decimal" />
+        <button type="button" class="btn ghost" id="ctrlSync" hidden>기록값으로</button>
+      </div>
+    </div>
+
+    <div class="seg" role="tablist" aria-label="목표 종류">
+      <button type="button" role="tab" id="tabRatio" aria-selected="true" aria-pressed="true">다른 배율이면?</button>
+      <button type="button" role="tab" id="tabTime" aria-selected="false" aria-pressed="false">목표 시간</button>
+    </div>
+
+    <div class="goal-pane" id="paneRatio">
+      <div class="field">
+        <label for="goalRatio">상대할 배율</label>
+        <input type="number" id="goalRatio" value="150" step="0.1" min="0" inputmode="decimal" />
+      </div>
+      <div class="goal-out" id="outRatio"></div>
+    </div>
+
+    <div class="goal-pane" id="paneTime" hidden>
+      <div class="field">
+        <label for="goalMin">목표 클리어 타임 <span class="hint">— 분 : 초</span></label>
+        <div class="time-row">
+          <input type="number" id="goalMin" value="15" min="0" max="20" inputmode="numeric" aria-label="분" />
+          <span class="colon">:</span>
+          <input type="number" id="goalSec" value="0" min="0" max="59" inputmode="numeric" aria-label="초" />
+        </div>
+      </div>
+      <div class="goal-out" id="outTime"></div>
+    </div>
+  </section>
+
+  <!-- 3. 보스 프리셋 -->
+  <section class="card" aria-labelledby="presetTitle">
+    <h2 class="card-title" id="presetTitle"><span>03</span>보스 프리셋</h2>
+    <p class="card-sub">보스별 배율을 저장해두면 기준 컨트롤로 예상 결과를 한눈에 봅니다. 이 브라우저에만 저장됩니다.</p>
+
+    <form class="preset-form" id="presetForm" autocomplete="off">
+      <input type="text" id="pName" maxlength="24" placeholder="보스 이름" aria-label="보스 이름" required />
+      <input type="number" id="pRatio" step="0.1" min="0.1" placeholder="배율" aria-label="배율" inputmode="decimal" required />
+      <button type="submit" class="btn">추가</button>
+    </form>
+
+    <ul class="preset-list" id="presetList"></ul>
+  </section>
+
+  <footer>
+    이상 속도 = <code>배율 ÷ 20</code> %/분 · 실제 속도 = <code>진행% ÷ 걸린 분</code> · 컨트롤 = <code>실제 ÷ 이상</code><br>
+    최소 배율 = <code>100 ÷ 컨트롤비율</code> · 예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율)</code> 분<br>
+    전투 내내 같은 페이스를 유지한다는 가정입니다.
+  </footer>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
