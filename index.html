@@ -140,15 +140,13 @@
       <label for="damage">내 20분 딜량 <span class="hint">— 예) 350조, 1.2경, 350조 5000억</span></label>
       <input type="text" id="damage" placeholder="350조" autocomplete="off" inputmode="text" />
       <p class="field-note" id="damageNote" hidden></p>
-      <label class="check"><input type="checkbox" id="halfDmg" /> 반감 전 딜량이에요 <span class="hint">— 반감 보스는 절반만 들어간 것으로 계산</span></label>
+      <label class="check"><input type="checkbox" id="halfDmg" /> 반감 적용 전 딜량이에요 <span class="hint">— 체크하면 딜량을 절반으로 계산</span></label>
     </div>
 
     <div class="list-tools">
       <input type="search" id="bossSearch" placeholder="보스 검색" aria-label="보스 검색" autocomplete="off" />
       <div class="seg tier-seg" role="group" aria-label="티어 필터" id="tierSeg">
         <button type="button" data-tier="" aria-pressed="true">전체</button>
-        <button type="button" data-tier="납별" aria-pressed="false">납</button>
-        <button type="button" data-tier="동별" aria-pressed="false">동</button>
         <button type="button" data-tier="은별" aria-pressed="false">은</button>
         <button type="button" data-tier="금별" aria-pressed="false">금</button>
       </div>

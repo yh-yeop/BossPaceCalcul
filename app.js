@@ -107,7 +107,7 @@ function applyState(s) {
   for (const [k, e] of Object.entries(map)) if (s[k] != null) e.value = s[k];
   if (s.halfDmg != null) el.halfDmg.checked = !!s.halfDmg;
   if (s.goalTab) goalTab = s.goalTab;
-  if (typeof s.tier === 'string') tier = s.tier;
+  if (s.tier === '' || s.tier === '은별' || s.tier === '금별') tier = s.tier;
   if (s.mode === 'clear' || s.mode === 'fail') mode = s.mode;
 }
 
@@ -408,7 +408,7 @@ $('saveImage').addEventListener('click', async () => {
 });
 
 el.source.innerHTML = `보스 체력: <a href="${SOURCE.url}" target="_blank" rel="noopener">${SOURCE.name}</a> (${SOURCE.date} 조회). ` +
-  '카오스 파풀라투스 이상은 유저 측정값이며, 오버드라이브 패치 이후 주간 보스 체력은 실제와 다를 수 있습니다.';
+  '하드 스우 이상만 수록. 모두 유저 측정값이며, 오버드라이브 패치 이후 주간 보스 체력은 실제와 다를 수 있습니다.';
 
 el.btnClear.onclick = () => setMode('clear');
 el.btnFail.onclick = () => setMode('fail');
