@@ -238,6 +238,9 @@ input[type=number]{-moz-appearance:textfield}
 .field-note{font-size:12px;color:var(--text-faint);margin-top:8px}
 .field-note b{color:var(--text-dim);font-weight:500}
 .card-sub code{font-family:'IBM Plex Mono',monospace;color:var(--text-dim)}
+.ref-line{font-size:13px;color:var(--text-dim);background:var(--ink);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+.ref-line b{color:var(--text);font-weight:500}
+.ref-line.warn{color:var(--text-faint)}
 .check{
   display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;
   margin:12px 0 0;font-size:13px;font-weight:400;color:var(--text-dim);cursor:pointer;

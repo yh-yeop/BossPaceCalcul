@@ -70,13 +70,6 @@ export function fmtKoShort(n) {
   return Math.round(n).toLocaleString('ko-KR');
 }
 
-// 딜량과 보스 체력 → 배율(%). halfDmg: 딜량이 반감 전 기준이면 반감 보스는 절반만 들어감
-export function ratioFor(damage, hp, halfBoss, halfDmg) {
-  if (!(damage > 0) || !(hp > 0)) return 0;
-  const eff = halfDmg && halfBoss ? damage / 2 : damage;
-  return eff / hp * 100;
-}
-
 // 분(소수) → "m:ss"
 export function fmtTime(min) {
   const total = Math.round(min * 60);
