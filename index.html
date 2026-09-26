@@ -26,19 +26,16 @@
   <section class="card" aria-labelledby="recTitle">
     <h2 class="card-title" id="recTitle"><span>01</span>내 기록</h2>
 
-    <div class="field" id="presetPickRow" hidden>
-      <label>보스 프리셋</label>
-      <div class="chips" id="presetChips"></div>
-    </div>
-
     <div class="field">
-      <label for="boss">보스 이름 <span class="hint">— 선택, 공유 이미지에 표시</span></label>
-      <input type="text" id="boss" maxlength="24" placeholder="예) 하드 세렌" autocomplete="off" />
+      <label for="boss">보스 <span class="hint">— 목록에서 고르면 딜량 기준으로 배율 자동 입력</span></label>
+      <input type="text" id="boss" maxlength="24" placeholder="예) 하드 선택받은 세렌" autocomplete="off" list="bossNames" />
+      <datalist id="bossNames"></datalist>
     </div>
 
     <div class="field">
       <label for="ratio">배율 <span class="hint">— 20분 기준 이상적 %</span></label>
       <input type="number" id="ratio" value="184.6" step="0.1" min="0" inputmode="decimal" />
+      <p class="field-note" id="ratioNote" hidden></p>
     </div>
 
     <div class="field">
@@ -134,18 +131,41 @@
     </div>
   </section>
 
-  <!-- 3. 보스 프리셋 -->
+  <!-- 3. 보스별 배율 -->
   <section class="card" aria-labelledby="presetTitle">
-    <h2 class="card-title" id="presetTitle"><span>03</span>보스 프리셋</h2>
-    <p class="card-sub">보스별 배율을 저장해두면 기준 컨트롤로 예상 결과를 한눈에 봅니다. 이 브라우저에만 저장됩니다.</p>
+    <h2 class="card-title" id="presetTitle"><span>03</span>보스별 배율</h2>
+    <p class="card-sub">20분 딜량을 넣으면 <code>딜량 ÷ 보스 체력</code>으로 보스마다 배율을 구하고, 기준 컨트롤로 예상 결과를 보여줍니다. 보스를 누르면 내 기록에 불러옵니다.</p>
 
-    <form class="preset-form" id="presetForm" autocomplete="off">
-      <input type="text" id="pName" maxlength="24" placeholder="보스 이름" aria-label="보스 이름" required />
-      <input type="number" id="pRatio" step="0.1" min="0.1" placeholder="배율" aria-label="배율" inputmode="decimal" required />
-      <button type="submit" class="btn">추가</button>
-    </form>
+    <div class="field">
+      <label for="damage">내 20분 딜량 <span class="hint">— 예) 350조, 1.2경, 350조 5000억</span></label>
+      <input type="text" id="damage" placeholder="350조" autocomplete="off" inputmode="text" />
+      <p class="field-note" id="damageNote" hidden></p>
+      <label class="check"><input type="checkbox" id="halfDmg" /> 반감 전 딜량이에요 <span class="hint">— 반감 보스는 절반만 들어간 것으로 계산</span></label>
+    </div>
+
+    <div class="list-tools">
+      <input type="search" id="bossSearch" placeholder="보스 검색" aria-label="보스 검색" autocomplete="off" />
+      <div class="seg tier-seg" role="group" aria-label="티어 필터" id="tierSeg">
+        <button type="button" data-tier="" aria-pressed="true">전체</button>
+        <button type="button" data-tier="납별" aria-pressed="false">납</button>
+        <button type="button" data-tier="동별" aria-pressed="false">동</button>
+        <button type="button" data-tier="은별" aria-pressed="false">은</button>
+        <button type="button" data-tier="금별" aria-pressed="false">금</button>
+      </div>
+    </div>
 
     <ul class="preset-list" id="presetList"></ul>
+
+    <details class="custom-add">
+      <summary>목록에 없는 보스 직접 추가</summary>
+      <form class="preset-form" id="presetForm" autocomplete="off">
+        <input type="text" id="pName" maxlength="24" placeholder="보스 이름" aria-label="보스 이름" required />
+        <input type="text" id="pHp" placeholder="체력 (예: 327조)" aria-label="체력" required />
+        <button type="submit" class="btn">추가</button>
+      </form>
+    </details>
+
+    <p class="source" id="source"></p>
   </section>
 
   <footer>

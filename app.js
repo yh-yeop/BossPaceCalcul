@@ -1,9 +1,14 @@
-import { LIMIT_MIN, analyze, predict, requiredControl, minRatio, clamp, fmtTime, fmtTimeKo } from './calc.js';
+import {
+  LIMIT_MIN, analyze, predict, requiredControl, minRatio, clamp, fmtTime, fmtTimeKo,
+  parseKoNum, fmtKoShort, ratioFor,
+} from './calc.js';
+import { BOSSES, SOURCE } from './data.js';
 import { renderCard } from './share.js';
 
 const $ = id => document.getElementById(id);
 const el = {
-  boss: $('boss'), ratio: $('ratio'), min: $('clearMin'), sec: $('clearSec'), hp: $('hpLeft'),
+  boss: $('boss'), bossNames: $('bossNames'), ratio: $('ratio'), ratioNote: $('ratioNote'),
+  min: $('clearMin'), sec: $('clearSec'), hp: $('hpLeft'),
   clearBox: $('clearInputs'), failBox: $('failInputs'),
   btnClear: $('modeClear'), btnFail: $('modeFail'),
   track: $('track'), fill: $('fill'), mark: $('idealMark'),
@@ -12,9 +17,10 @@ const el = {
   tabRatio: $('tabRatio'), tabTime: $('tabTime'), paneRatio: $('paneRatio'), paneTime: $('paneTime'),
   goalRatio: $('goalRatio'), goalMin: $('goalMin'), goalSec: $('goalSec'),
   outRatio: $('outRatio'), outTime: $('outTime'),
-  presetPickRow: $('presetPickRow'), presetChips: $('presetChips'),
-  presetForm: $('presetForm'), pName: $('pName'), pRatio: $('pRatio'), presetList: $('presetList'),
-  toast: $('toast'),
+  damage: $('damage'), damageNote: $('damageNote'), halfDmg: $('halfDmg'),
+  bossSearch: $('bossSearch'), tierSeg: $('tierSeg'),
+  presetForm: $('presetForm'), pName: $('pName'), pHp: $('pHp'), presetList: $('presetList'),
+  source: $('source'), toast: $('toast'),
 };
 
 const STATE_KEY = 'bpc:state';
@@ -22,19 +28,40 @@ const PRESET_KEY = 'bpc:presets';
 
 let mode = 'clear';
 let goalTab = 'ratio';
+let tier = '';
 let ctrlOverride = false; // 기준 컨트롤을 직접 입력했는지
-let presets = [];
-let last = null; // 마지막 기록 분석 결과
+let custom = [];          // 직접 추가한 보스 {id, name, hp} (구버전은 {id, name, ratio})
+let last = null;          // 마지막 기록 분석 결과
 
 const num = e => { const v = parseFloat(e.value); return isFinite(v) ? v : 0; };
 const f1 = v => v.toFixed(1);
-const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function load(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; }
 }
 function save(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* 저장 불가 환경 무시 */ }
+}
+
+/* ---------- 보스 데이터 ---------- */
+function allBosses() {
+  const list = BOSSES.map(b => ({ ...b, builtin: true }));
+  for (const c of custom) list.push({ id: c.id, name: c.name, hp: c.hp, ratio: c.ratio, tier: '', half: 'y' });
+  return list;
+}
+function findBoss(name) {
+  const n = name.trim();
+  return n ? allBosses().find(b => b.name === n) : undefined;
+}
+function damage() {
+  const v = parseKoNum(el.damage.value);
+  return v > 0 ? v : 0;
+}
+// 보스의 배율: 체력이 있으면 딜량으로 계산, 구버전 프리셋은 저장된 배율
+function bossRatio(b) {
+  if (b.hp) return ratioFor(damage(), b.hp, b.half === 'y', el.halfDmg.checked);
+  return b.ratio || 0;
 }
 
 /* ---------- 모드 / 탭 ---------- */
@@ -54,7 +81,13 @@ function setTab(t) {
     b.setAttribute('aria-pressed', on);
     b.setAttribute('aria-selected', on);
   }
-  save(STATE_KEY, readState());
+  persist();
+}
+function setTier(t) {
+  tier = t;
+  for (const b of el.tierSeg.querySelectorAll('button')) b.setAttribute('aria-pressed', b.dataset.tier === t);
+  renderPresets();
+  persist();
 }
 
 /* ---------- 입력 상태 ---------- */
@@ -63,19 +96,18 @@ function readState() {
     boss: el.boss.value.trim(), ratio: el.ratio.value, mode,
     min: el.min.value, sec: el.sec.value, hp: el.hp.value,
     goalRatio: el.goalRatio.value, goalMin: el.goalMin.value, goalSec: el.goalSec.value, goalTab,
+    damage: el.damage.value, halfDmg: el.halfDmg.checked, tier,
   };
 }
+function persist() { save(STATE_KEY, readState()); }
 function applyState(s) {
   if (!s) return;
-  if (s.boss != null) el.boss.value = s.boss;
-  if (s.ratio != null) el.ratio.value = s.ratio;
-  if (s.min != null) el.min.value = s.min;
-  if (s.sec != null) el.sec.value = s.sec;
-  if (s.hp != null) el.hp.value = s.hp;
-  if (s.goalRatio != null) el.goalRatio.value = s.goalRatio;
-  if (s.goalMin != null) el.goalMin.value = s.goalMin;
-  if (s.goalSec != null) el.goalSec.value = s.goalSec;
+  const map = { boss: el.boss, ratio: el.ratio, min: el.min, sec: el.sec, hp: el.hp,
+    goalRatio: el.goalRatio, goalMin: el.goalMin, goalSec: el.goalSec, damage: el.damage };
+  for (const [k, e] of Object.entries(map)) if (s[k] != null) e.value = s[k];
+  if (s.halfDmg != null) el.halfDmg.checked = !!s.halfDmg;
   if (s.goalTab) goalTab = s.goalTab;
+  if (typeof s.tier === 'string') tier = s.tier;
   if (s.mode === 'clear' || s.mode === 'fail') mode = s.mode;
 }
 
@@ -115,7 +147,22 @@ function update() {
   el.ctrlSync.hidden = !ctrlOverride;
   renderGoal();
   renderPresets();
-  save(STATE_KEY, readState());
+  persist();
+}
+
+// 보스 이름이 목록과 일치하면 딜량 기준 배율을 채운다
+function syncRatioFromBoss() {
+  const b = findBoss(el.boss.value);
+  const r = b ? bossRatio(b) : 0;
+  if (r > 0) {
+    el.ratio.value = f1(r);
+    el.ratioNote.innerHTML = b.hp
+      ? `${esc(b.name)} 체력 <b>${fmtKoShort(b.hp)}</b> · 딜량 <b>${fmtKoShort(damage())}</b>${el.halfDmg.checked && b.half === 'y' ? ' (반감 적용)' : ''} 기준`
+      : `${esc(b.name)} 저장된 배율`;
+    el.ratioNote.hidden = false;
+  } else {
+    el.ratioNote.hidden = true;
+  }
 }
 
 function renderRecord() {
@@ -201,74 +248,105 @@ function renderGoal() {
   el.outTime.innerHTML = html;
 }
 
-/* ---------- 프리셋 ---------- */
-function savePresets() { save(PRESET_KEY, presets); }
+/* ---------- 보스별 배율 ---------- */
+function renderDamageNote() {
+  const raw = el.damage.value.trim();
+  const d = damage();
+  if (!raw) { el.damageNote.hidden = true; return; }
+  el.damageNote.hidden = false;
+  el.damageNote.innerHTML = d > 0 ? `= <b>${fmtKoShort(d)}</b>` : '숫자와 경·조·억·만 단위로 입력하세요';
+}
 
 function renderPresets() {
-  const ratio = num(el.ratio);
-  const boss = el.boss.value.trim();
   const c = baseControl();
-  const sorted = [...presets].sort((a, b) => b.ratio - a.ratio);
+  const d = damage();
+  const boss = el.boss.value.trim();
+  const q = el.bossSearch.value.trim().replace(/\s/g, '');
 
-  el.presetPickRow.hidden = presets.length === 0;
-  el.presetChips.innerHTML = sorted.map(p => {
-    const on = p.name === boss && p.ratio === ratio;
-    return `<button type="button" class="chip" data-id="${p.id}" aria-pressed="${on}">${esc(p.name)}<b>${f1(p.ratio)}</b></button>`;
-  }).join('');
+  const list = allBosses()
+    .filter(b => !tier || b.tier.startsWith(tier))
+    .filter(b => !q || b.name.replace(/\s/g, '').includes(q))
+    .sort((a, b) => (a.hp || 0) - (b.hp || 0));
 
-  if (!presets.length) {
-    el.presetList.innerHTML = '<li class="empty">아직 저장된 보스가 없습니다.</li>';
+  if (!list.length) {
+    el.presetList.innerHTML = '<li class="empty">일치하는 보스가 없습니다.</li>';
     return;
   }
-  el.presetList.innerHTML = sorted.map(p => {
-    const r = c > 0 ? predict(p.ratio, c) : null;
-    const pred = !r ? '—'
-      : r.cleared ? `<span class="ok-text">${fmtTime(r.timeMin)}</span>`
-      : `<span class="no-text">hp ${f1(r.hpLeft)}%</span>`;
-    return `<li>
-      <button type="button" class="p-load" data-id="${p.id}" title="기록에 불러오기">${esc(p.name)}<span>${f1(p.ratio)}</span></button>
+  el.presetList.innerHTML = list.map(b => {
+    const r = bossRatio(b);
+    const p = r > 0 && c > 0 ? predict(r, c) : null;
+    const pred = !p ? '<span class="p-dim">—</span>'
+      : p.cleared ? `<span class="ok-text">${fmtTime(p.timeMin)}</span>`
+      : `<span class="no-text">hp ${f1(p.hpLeft)}%</span>`;
+    const tag = b.builtin ? `<span class="tag t-${b.tier.slice(0, 2)}">${b.tier}</span>` : '<span class="tag">직접</span>';
+    const meta = [
+      b.hp ? `체력 ${fmtKoShort(b.hp)}${b.half === 'n' ? ' 비반감' : b.half === 'm' ? ' 반감 혼합' : ''}` : '',
+      r > 0 ? `배율 <b>${f1(r)}</b>` : d > 0 ? '' : '배율 —',
+    ].filter(Boolean).join(' · ');
+    const key = b.builtin ? `b:${b.name}` : `c:${b.id}`;
+    return `<li${b.name === boss ? ' class="on"' : ''}>
+      <button type="button" class="p-load" data-key="${esc(key)}" title="내 기록에 불러오기">
+        <span class="p-name">${esc(b.name)}${tag}</span>
+        <span class="p-meta">${meta}</span>
+      </button>
       <span class="p-pred">${pred}</span>
-      <button type="button" class="p-del" data-id="${p.id}" aria-label="${esc(p.name)} 삭제">×</button>
+      ${b.builtin ? '<span></span>' : `<button type="button" class="p-del" data-id="${b.id}" aria-label="${esc(b.name)} 삭제">×</button>`}
     </li>`;
   }).join('');
 }
 
-function loadPreset(id) {
-  const p = presets.find(x => x.id === id);
-  if (!p) return;
-  el.boss.value = p.name;
-  el.ratio.value = p.ratio;
-  update();
+function renderBossNames() {
+  el.bossNames.innerHTML = allBosses().map(b => `<option value="${esc(b.name)}"></option>`).join('');
 }
+
+function loadBoss(key) {
+  const b = key.startsWith('b:')
+    ? allBosses().find(x => x.builtin && x.name === key.slice(2))
+    : allBosses().find(x => !x.builtin && x.id === key.slice(2));
+  if (!b) return;
+  el.boss.value = b.name;
+  syncRatioFromBoss();
+  if (b.hp && !(damage() > 0)) {
+    toast('딜량을 넣으면 배율이 자동으로 채워집니다');
+    el.damage.focus();
+    update();
+    return;
+  }
+  update();
+  document.getElementById('recTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function saveCustom() { save(PRESET_KEY, custom); renderBossNames(); }
 
 el.presetForm.addEventListener('submit', e => {
   e.preventDefault();
   const name = el.pName.value.trim();
-  const ratio = Math.round(num(el.pRatio) * 10) / 10;
-  if (!name || !(ratio > 0)) return;
-  const same = presets.find(p => p.name === name);
-  if (same) same.ratio = ratio;
-  else presets.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, ratio });
-  savePresets();
-  el.pName.value = ''; el.pRatio.value = '';
-  el.pName.focus();
+  const hp = parseKoNum(el.pHp.value);
+  if (!name) return;
+  if (!(hp > 0)) { toast('체력을 숫자와 단위로 입력하세요 (예: 327조)'); el.pHp.focus(); return; }
+  if (BOSSES.some(b => b.name === name)) { toast('이미 목록에 있는 이름입니다'); return; }
+  const same = custom.find(p => p.name === name);
+  if (same) { same.hp = hp; delete same.ratio; }
+  else custom.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, hp });
+  saveCustom();
+  el.pName.value = ''; el.pHp.value = '';
   renderPresets();
-  toast(same ? `${name} 배율을 갱신했습니다` : `${name} 추가됨`);
+  toast(same ? `${name} 체력을 갱신했습니다` : `${name} 추가됨`);
 });
 
 el.presetList.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
-  if (b.classList.contains('p-load')) loadPreset(b.dataset.id);
+  if (b.classList.contains('p-load')) loadBoss(b.dataset.key);
   if (b.classList.contains('p-del')) {
-    presets = presets.filter(p => p.id !== b.dataset.id);
-    savePresets();
+    custom = custom.filter(p => p.id !== b.dataset.id);
+    saveCustom();
     renderPresets();
   }
 });
-el.presetChips.addEventListener('click', e => {
-  const b = e.target.closest('.chip');
-  if (b) loadPreset(b.dataset.id);
+el.tierSeg.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) setTier(b.dataset.tier);
 });
 
 /* ---------- 공유 ---------- */
@@ -329,13 +407,26 @@ $('saveImage').addEventListener('click', async () => {
   el.track.insertBefore(t, el.track.firstChild);
 });
 
+el.source.innerHTML = `보스 체력: <a href="${SOURCE.url}" target="_blank" rel="noopener">${SOURCE.name}</a> (${SOURCE.date} 조회). ` +
+  '카오스 파풀라투스 이상은 유저 측정값이며, 오버드라이브 패치 이후 주간 보스 체력은 실제와 다를 수 있습니다.';
+
 el.btnClear.onclick = () => setMode('clear');
 el.btnFail.onclick = () => setMode('fail');
 el.tabRatio.onclick = () => setTab('ratio');
 el.tabTime.onclick = () => setTab('time');
 
-[el.boss, el.ratio, el.min, el.sec, el.hp, el.goalRatio, el.goalMin, el.goalSec]
+[el.ratio, el.min, el.sec, el.hp, el.goalRatio, el.goalMin, el.goalSec]
   .forEach(e => e.addEventListener('input', update));
+el.ratio.addEventListener('input', () => { el.ratioNote.hidden = true; });
+el.boss.addEventListener('input', () => { syncRatioFromBoss(); update(); });
+for (const e of [el.damage, el.halfDmg]) {
+  e.addEventListener(e.type === 'checkbox' ? 'change' : 'input', () => {
+    renderDamageNote();
+    syncRatioFromBoss();
+    update();
+  });
+}
+el.bossSearch.addEventListener('input', renderPresets);
 el.ctrlIn.addEventListener('input', () => {
   ctrlOverride = el.ctrlIn.value !== '';
   el.ctrlSync.hidden = !ctrlOverride;
@@ -344,9 +435,13 @@ el.ctrlIn.addEventListener('input', () => {
 });
 el.ctrlSync.addEventListener('click', () => { ctrlOverride = false; update(); });
 
-presets = load(PRESET_KEY, []).filter(p => p && typeof p.name === 'string' && p.ratio > 0);
+custom = load(PRESET_KEY, []).filter(p => p && typeof p.name === 'string' && (p.hp > 0 || p.ratio > 0));
+renderBossNames();
 const fromUrl = stateFromUrl();
 applyState(load(STATE_KEY, null));
 applyState(fromUrl);
+renderDamageNote();
+if (!fromUrl) syncRatioFromBoss();
 setTab(goalTab);
+setTier(tier);
 setMode(mode);
