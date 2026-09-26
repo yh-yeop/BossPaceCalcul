@@ -22,7 +22,7 @@ export function predict(ratio, c) {
   const rate = (ratio / LIMIT_MIN) * c; // %/분
   if (!(rate > 0)) return null;
   const timeMin = 100 / rate;
-  if (timeMin <= LIMIT_MIN) return { cleared: true, timeMin, hpLeft: 0 };
+  if (timeMin <= LIMIT_MIN + 1e-9) return { cleared: true, timeMin, hpLeft: 0 };
   return { cleared: false, timeMin, hpLeft: 100 - rate * LIMIT_MIN };
 }
 
@@ -38,36 +38,6 @@ export function minRatio(c, targetMin = LIMIT_MIN) {
 
 export function clamp(v, lo, hi) {
   return Math.min(hi, Math.max(lo, v));
-}
-
-const KO_UNITS = [['경', 1e16], ['조', 1e12], ['억', 1e8], ['만', 1e4]];
-
-// "350조 5000억", "1.2경", "12,345,678" → 숫자. 해석 불가면 NaN
-export function parseKoNum(str) {
-  const s = String(str).replace(/[,\s]/g, '');
-  if (!s) return NaN;
-  if (/^\d+(\.\d+)?$/.test(s)) return parseFloat(s);
-  const re = /(\d+(?:\.\d+)?)(경|조|억|만)?/y;
-  let total = 0, m;
-  while (re.lastIndex < s.length) {
-    m = re.exec(s);
-    if (!m) return NaN;
-    const unit = KO_UNITS.find(u => u[0] === m[2]);
-    total += parseFloat(m[1]) * (unit ? unit[1] : 1);
-  }
-  return total;
-}
-
-// 큰 수 → 한글 단위 약식 ("1.26경", "3257조", "8220억")
-export function fmtKoShort(n) {
-  for (const [u, v] of KO_UNITS) {
-    if (n >= v) {
-      const x = n / v;
-      const d = x >= 1000 ? 0 : x >= 100 ? 1 : 2;
-      return parseFloat(x.toFixed(d)).toLocaleString('ko-KR') + u;
-    }
-  }
-  return Math.round(n).toLocaleString('ko-KR');
 }
 
 // 분(소수) → "m:ss"

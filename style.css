@@ -235,72 +235,33 @@ input[type=number]{-moz-appearance:textfield}
 .no-text{color:var(--hp)}
 .empty{grid-column:1/-1;font-size:13px;color:var(--text-faint)}
 
-.field-note{font-size:12px;color:var(--text-faint);margin-top:8px}
-.field-note b{color:var(--text-dim);font-weight:500}
 .card-sub code{font-family:'IBM Plex Mono',monospace;color:var(--text-dim)}
-.ref-line{font-size:13px;color:var(--text-dim);background:var(--ink);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;margin-bottom:12px}
-.ref-line b{color:var(--text);font-weight:500}
-.ref-line.warn{color:var(--text-faint)}
-.check{
-  display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;
-  margin:12px 0 0;font-size:13px;font-weight:400;color:var(--text-dim);cursor:pointer;
-}
-.check input{accent-color:var(--gold);width:16px;height:16px}
 
-/* 보스 목록 */
-.list-tools{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}
-@media(max-width:440px){.list-tools{grid-template-columns:1fr}}
-input[type=search]{
-  width:100%;min-width:0;
-  background:var(--ink);border:1px solid var(--line);border-radius:9px;
-  color:var(--text);font-family:inherit;font-size:15px;padding:9px 12px;
+/* 체감 배율 표 */
+.feel-head,.feel-list button{
+  display:grid;grid-template-columns:1.3fr 1fr 1fr;align-items:center;gap:8px;
 }
-.tier-seg button{flex:none;padding:7px 12px;font-size:13px}
-@media(max-width:440px){.tier-seg button{flex:1}}
-
-.preset-list{
-  list-style:none;display:flex;flex-direction:column;gap:6px;
-  max-height:460px;overflow-y:auto;overscroll-behavior:contain;
-  margin:0 -4px;padding:0 4px;
+.feel-head{padding:0 14px 8px;font-size:11.5px;color:var(--text-faint);letter-spacing:.04em}
+.feel-head span:not(:first-child),.feel-list .f-feel,.feel-list .f-pred{text-align:right}
+.feel-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.feel-list button{
+  width:100%;
+  background:var(--ink);border:1px solid var(--line-soft);border-radius:9px;
+  color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;
+  padding:9px 14px;cursor:pointer;text-align:left;
 }
-.preset-list li{
-  display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;
-  background:var(--ink);
-  border:1px solid var(--line-soft);
-  border-radius:10px;
-  padding:4px 4px 4px 0;
-}
-.preset-list li.on{border-color:var(--gold-dim)}
-.preset-list .p-load{
-  background:none;border:none;color:var(--text);text-align:left;cursor:pointer;
-  font-family:inherit;padding:6px 0 6px 14px;min-width:0;
-}
-.preset-list .p-name{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.preset-list .p-meta{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-faint);white-space:nowrap}
-.preset-list .p-meta b{color:var(--text-dim);font-weight:500}
-.preset-list .p-load:hover .p-name{color:var(--gold)}
-.preset-list .p-pred{font-family:'IBM Plex Mono',monospace;font-size:13px;white-space:nowrap;text-align:right;padding-right:10px}
-.preset-list .p-del{
-  background:none;border:none;color:var(--text-faint);cursor:pointer;
-  width:28px;height:28px;border-radius:7px;font-size:16px;line-height:1;
-}
-.preset-list .p-del:hover{color:var(--hp);background:var(--panel-2)}
-.preset-list .empty{padding:10px 2px;background:none;border:none;display:block}
+.feel-list button:hover{border-color:#4A3B69}
+.feel-list .mine button{border-color:var(--violet)}
+.feel-list .edge button{border-color:var(--gold-dim)}
+.feel-list .f-feel{font-weight:600}
+.feel-list .empty{font-size:13px;color:var(--text-faint);padding:6px 2px}
 .tag{
   display:inline-block;font-size:10.5px;font-family:'IBM Plex Sans KR',sans-serif;
   padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:1px;
-  background:var(--panel-2);color:var(--text-faint);
+  background:var(--panel-2);color:var(--text-dim);white-space:nowrap;
 }
-.tag.t-납별{color:#9C94AE}.tag.t-동별{color:#C98E5A}.tag.t-은별{color:#C5CBD8}.tag.t-금별{color:var(--gold)}
-
-.custom-add{margin-top:14px}
-.custom-add summary{font-size:13px;color:var(--text-dim);cursor:pointer;padding:4px 0}
-.custom-add summary:hover{color:var(--text)}
-.preset-form{display:grid;grid-template-columns:1fr 150px auto;gap:8px;margin-top:10px}
-.preset-form input{font-size:15px;padding:9px 12px}
-@media(max-width:440px){.preset-form{grid-template-columns:1fr 1fr}.preset-form .btn{grid-column:1/-1}}
-.source{margin-top:14px;font-size:11.5px;color:var(--text-faint);line-height:1.6}
-.source a{color:var(--text-dim)}
+.mine .tag{color:var(--violet)}
+.edge .tag{color:var(--gold)}
 
 footer{margin-top:28px;font-size:12px;color:var(--text-faint);line-height:1.7}
 footer code{font-family:'IBM Plex Mono',monospace;color:var(--text-dim)}
@@ -315,4 +276,3 @@ footer code{font-family:'IBM Plex Mono',monospace;color:var(--text-dim)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-.p-dim{color:var(--text-faint)}

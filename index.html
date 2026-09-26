@@ -27,9 +27,8 @@
     <h2 class="card-title" id="recTitle"><span>01</span>내 기록</h2>
 
     <div class="field">
-      <label for="boss">보스 <span class="hint">— 목록에서 고르면 03에서 다른 보스와 비교</span></label>
-      <input type="text" id="boss" maxlength="24" placeholder="예) 하드 선택받은 세렌" autocomplete="off" list="bossNames" />
-      <datalist id="bossNames"></datalist>
+      <label for="boss">보스 이름 <span class="hint">— 선택, 공유 이미지에 표시</span></label>
+      <input type="text" id="boss" maxlength="24" placeholder="예) 하드 세렌" autocomplete="off" />
     </div>
 
     <div class="field">
@@ -111,7 +110,7 @@
 
     <div class="goal-pane" id="paneRatio">
       <div class="field">
-        <label for="goalRatio" id="goalLabel">상대할 배율</label>
+        <label for="goalRatio">상대할 배율</label>
         <input type="number" id="goalRatio" value="150" step="0.1" min="0" inputmode="decimal" />
       </div>
       <div class="goal-out" id="outRatio"></div>
@@ -130,38 +129,19 @@
     </div>
   </section>
 
-  <!-- 3. 보스별 배율 -->
-  <section class="card" aria-labelledby="presetTitle">
-    <h2 class="card-title" id="presetTitle"><span>03</span>이 컨트롤이면 다른 보스는?</h2>
-    <p class="card-sub">내 기록의 보스·배율에서 같은 딜을 넣는다고 보고, 보스 체력 비율로 배율을 환산해 기준 컨트롤로 예상 결과를 보여줍니다. 보스를 누르면 목표 계산에서 자세히 봅니다.</p>
-    <p class="ref-line" id="presetRef"></p>
+  <!-- 3. 체감 배율 -->
+  <section class="card" aria-labelledby="feelTitle">
+    <h2 class="card-title" id="feelTitle"><span>03</span>이 컨트롤이면 체감 배율은?</h2>
+    <p class="card-sub">체감 배율 = <code>배율 × 컨트롤</code>. 기준 컨트롤로 싸우면 그 배율 보스가 실제로는 배율 몇짜리처럼 느껴지는지입니다. 체감 100 이상이면 20분 컷. 행을 누르면 목표 계산에서 자세히 봅니다.</p>
 
-    <div class="list-tools">
-      <input type="search" id="bossSearch" placeholder="보스 검색" aria-label="보스 검색" autocomplete="off" />
-      <div class="seg tier-seg" role="group" aria-label="티어 필터" id="tierSeg">
-        <button type="button" data-tier="" aria-pressed="true">전체</button>
-        <button type="button" data-tier="은별" aria-pressed="false">은</button>
-        <button type="button" data-tier="금별" aria-pressed="false">금</button>
-      </div>
-    </div>
-
-    <ul class="preset-list" id="presetList"></ul>
-
-    <details class="custom-add">
-      <summary>목록에 없는 보스 직접 추가</summary>
-      <form class="preset-form" id="presetForm" autocomplete="off">
-        <input type="text" id="pName" maxlength="24" placeholder="보스 이름" aria-label="보스 이름" required />
-        <input type="text" id="pHp" placeholder="체력 (예: 327조)" aria-label="체력" required />
-        <button type="submit" class="btn">추가</button>
-      </form>
-    </details>
-
-    <p class="source" id="source"></p>
+    <div class="feel-head" aria-hidden="true"><span>배율</span><span>체감 배율</span><span>예상 결과</span></div>
+    <ul class="feel-list" id="feelList"></ul>
   </section>
 
   <footer>
     이상 속도 = <code>배율 ÷ 20</code> %/분 · 실제 속도 = <code>진행% ÷ 걸린 분</code> · 컨트롤 = <code>실제 ÷ 이상</code><br>
-    최소 배율 = <code>100 ÷ 컨트롤비율</code> · 예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율)</code> 분<br>
+    체감 배율 = <code>배율 × 컨트롤비율</code> · 최소 배율 = <code>100 ÷ 컨트롤비율</code><br>
+    예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율)</code> 분<br>
     전투 내내 같은 페이스를 유지한다는 가정입니다.
   </footer>
 
