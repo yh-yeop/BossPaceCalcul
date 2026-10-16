@@ -16,6 +16,7 @@ const el = {
   goalRatio: $('goalRatio'), goalMin: $('goalMin'), goalSec: $('goalSec'),
   outRatio: $('outRatio'), outTime: $('outTime'),
   feelList: $('feelList'), toast: $('toast'),
+  histList: $('histList'), histChart: $('histChart'),
 };
 
 const STATE_KEY = 'bpc:state';
@@ -289,6 +290,115 @@ $('saveImage').addEventListener('click', async () => {
   toast('이미지를 저장했습니다');
 });
 
+/* ---------- 기록 히스토리 ---------- */
+// 이 브라우저에만 저장된다. 서버 없음.
+const REC_KEY = 'bpc:records';
+const REC_MAX = 60;
+let records = load(REC_KEY, []);
+if (!Array.isArray(records)) records = [];
+records = records.filter(r => r && isFinite(r.ts) && isFinite(r.c) && r.c > 0);
+
+const pad2 = n => String(n).padStart(2, '0');
+const fmtDate = ts => { const d = new Date(ts); return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`; };
+const fmtDateFull = ts => { const d = new Date(ts); return `${d.getFullYear()}.${fmtDate(ts)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+
+function sparkline(rs) {
+  const W = 600, H = 120, L = 8, R = 52, T = 14, B = 22;
+  const iw = W - L - R, ih = H - T - B;
+  const vals = rs.map(r => r.c * 100);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 4) { lo -= 2; hi += 2; }
+  const padY = (hi - lo) * 0.12; lo -= padY; hi += padY;
+  const x = i => L + (rs.length === 1 ? iw / 2 : i / (rs.length - 1) * iw);
+  const y = v => T + ih - (v - lo) / (hi - lo) * ih;
+  const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  const parts = [`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="컨트롤 추이 그래프">`];
+  // 100% = 배율과 같은 페이스
+  if (100 > lo && 100 < hi) {
+    parts.push(`<line x1="${L}" y1="${y(100).toFixed(1)}" x2="${L + iw}" y2="${y(100).toFixed(1)}" stroke="#E8B75C" stroke-width="1" stroke-dasharray="4 4" opacity=".7"/>`);
+    parts.push(`<text x="${L + iw + 6}" y="${(y(100) + 4).toFixed(1)}" fill="#E8B75C" font-size="11" font-family="IBM Plex Mono,monospace">100%</text>`);
+  }
+  parts.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="#8E7BE8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+  vals.forEach((v, i) => {
+    const last = i === vals.length - 1;
+    parts.push(`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${last ? 4.5 : 3}" fill="${rs[i].cleared ? '#4FD1A5' : '#E2574C'}" stroke="#150F1E" stroke-width="1.5"/>`);
+  });
+  const vi = vals.length - 1;
+  parts.push(`<text x="${L + iw + 6}" y="${(y(vals[vi]) + 4).toFixed(1)}" fill="#EDE7F7" font-size="12" font-weight="600" font-family="IBM Plex Mono,monospace">${f1(vals[vi])}</text>`);
+  parts.push(`<text x="${L}" y="${H - 6}" fill="#6F6291" font-size="11" font-family="IBM Plex Mono,monospace">${fmtDate(rs[0].ts)}</text>`);
+  parts.push(`<text x="${L + iw}" y="${H - 6}" text-anchor="end" fill="#6F6291" font-size="11" font-family="IBM Plex Mono,monospace">${fmtDate(rs[vi].ts)} · ${rs.length}회</text>`);
+  parts.push('</svg>');
+  return parts.join('');
+}
+
+function renderHistory() {
+  if (!records.length) {
+    el.histList.innerHTML = '<li class="empty">저장된 기록이 없습니다.</li>';
+    el.histChart.hidden = true;
+    return;
+  }
+  const byTime = records.slice().sort((a, b) => a.ts - b.ts);
+  el.histChart.hidden = byTime.length < 2;
+  if (!el.histChart.hidden) el.histChart.innerHTML = sparkline(byTime);
+  el.histList.innerHTML = byTime.slice().reverse().map(r => {
+    const res = r.cleared
+      ? `<span class="ok-text">${fmtTime(r.timeMin)}</span>`
+      : `<span class="no-text">hp ${f1(r.hpLeft)}%</span>`;
+    return `<li data-ts="${r.ts}">
+      <button type="button" class="hist-row" data-load="${r.ts}" title="${fmtDateFull(r.ts)} 기록 불러오기">
+        <span class="h-date">${fmtDate(r.ts)}</span>
+        <span class="h-boss">${r.boss ? esc(r.boss) : '—'}<small>${f1(r.ratio)}</small></span>
+        <span class="h-res">${res}</span>
+        <span class="h-ctrl">${f1(r.c * 100)}%</span>
+      </button>
+      <button type="button" class="h-del" data-del="${r.ts}" aria-label="이 기록 삭제" title="삭제">×</button>
+    </li>`;
+  }).join('');
+}
+
+function saveRecord() {
+  if (!last?.valid) { toast('먼저 기록을 입력하세요'); return; }
+  records.push({
+    ts: Date.now(), boss: el.boss.value.trim(), ratio: last.ratio, cleared: last.cleared,
+    timeMin: last.cleared ? last.timeMin : null, hpLeft: last.cleared ? null : last.hpLeft, c: last.c,
+  });
+  if (records.length > REC_MAX) records = records.slice(records.length - REC_MAX);
+  save(REC_KEY, records);
+  renderHistory();
+  toast('기록을 저장했습니다');
+}
+
+function loadRecord(r) {
+  el.boss.value = r.boss || '';
+  el.ratio.value = String(r.ratio);
+  if (r.cleared) {
+    const total = Math.round(r.timeMin * 60);
+    el.min.value = String(Math.floor(total / 60));
+    el.sec.value = String(total % 60);
+  } else {
+    el.hp.value = String(r.hpLeft);
+  }
+  ctrlOverride = false;
+  setMode(r.cleared ? 'clear' : 'fail');
+  $('recTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast(`${fmtDateFull(r.ts)} 기록을 불러왔습니다`);
+}
+
+$('saveRecord').addEventListener('click', saveRecord);
+el.histList.addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    records = records.filter(r => String(r.ts) !== del.dataset.del);
+    save(REC_KEY, records);
+    renderHistory();
+    return;
+  }
+  const b = e.target.closest('button[data-load]');
+  if (!b) return;
+  const r = records.find(x => String(x.ts) === b.dataset.load);
+  if (r) loadRecord(r);
+});
+
 /* ---------- 초기화 ---------- */
 [25, 50, 75].forEach(p => {
   const t = document.createElement('div');
@@ -317,3 +427,4 @@ applyState(load(STATE_KEY, null));
 applyState(fromUrl);
 setTab(goalTab);
 setMode(mode);
+renderHistory();

@@ -1,0 +1,10 @@
+{
+  "name": "bosspacecalcul",
+  "private": true,
+  "type": "module",
+  "description": "배율 페이스 계산기 — 정적 사이트, 빌드 없음",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 5173"
+  }
+}

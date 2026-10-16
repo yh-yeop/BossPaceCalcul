@@ -6,6 +6,11 @@
 <title>배율 페이스 계산기</title>
 <meta name="description" content="보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다." />
 <meta name="theme-color" content="#150F1E" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="배율 페이스 계산기" />
+<meta property="og:description" content="보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다." />
+<meta property="og:url" content="https://yh-yeop.github.io/BossPaceCalcul/" />
+<meta property="og:locale" content="ko_KR" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <link rel="manifest" href="manifest.json" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,6 +94,7 @@
   <div class="share-bar">
     <button type="button" class="btn" id="copyLink">링크 복사</button>
     <button type="button" class="btn" id="saveImage">결과 이미지 저장</button>
+    <button type="button" class="btn" id="saveRecord">기록 저장</button>
   </div>
 
   <!-- 2. 역계산 -->
@@ -136,6 +142,15 @@
 
     <div class="feel-head" aria-hidden="true"><span>배율</span><span>체감 배율</span><span>예상 결과</span></div>
     <ul class="feel-list" id="feelList"></ul>
+  </section>
+
+  <!-- 4. 기록 히스토리 -->
+  <section class="card" aria-labelledby="histTitle">
+    <h2 class="card-title" id="histTitle"><span>04</span>기록 히스토리</h2>
+    <p class="card-sub">결과 아래 <b>기록 저장</b>을 누르면 이 브라우저에 쌓입니다. 컨트롤이 어떻게 변해 왔는지 보고, 행을 누르면 그 기록을 다시 불러옵니다.</p>
+    <div class="hist-chart" id="histChart" hidden></div>
+    <div class="hist-head" aria-hidden="true"><span>날짜</span><span>보스 · 배율</span><span>결과</span><span>컨트롤</span><span></span></div>
+    <ul class="hist-list" id="histList"></ul>
   </section>
 
   <footer>
