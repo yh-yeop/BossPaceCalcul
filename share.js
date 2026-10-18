@@ -38,10 +38,13 @@ function fitText(ctx, text, maxW, size, family, weight = '') {
  * @param {string} d.ctrl    "87.3"
  * @param {string} d.minRatio "211.5"
  * @param {string} d.url
+ * @param {{c:number, cleared:boolean, ts:number}[]} [d.trend]
+ *   컨트롤 추이(시간순). 2개 이상이면 카드 아래에 선 그래프를 그린다. 없으면 기존 레이아웃 그대로.
  */
 export async function renderCard(d) {
   await document.fonts.ready;
-  const W = 1080, H = 960, P = 88;
+  const trend = Array.isArray(d.trend) && d.trend.length >= 2 ? d.trend.slice(-TREND_MAX) : null;
+  const W = 1080, H = trend ? 1240 : 960, P = 88;
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
@@ -137,6 +140,8 @@ export async function renderCard(d) {
     }
   });
 
+  if (trend) drawTrend(ctx, trend, P, by + bh + 70, W - P * 2, 230);
+
   // 하단
   ctx.fillStyle = C.faint;
   ctx.font = `400 22px ${MONO}`;
@@ -145,3 +150,60 @@ export async function renderCard(d) {
 
   return new Promise(res => cv.toBlob(res, 'image/png'));
 }
+
+const TREND_MAX = 12;
+const pad2 = n => String(n).padStart(2, '0');
+const fmtDate = ts => { const dt = new Date(ts); return `${pad2(dt.getMonth() + 1)}.${pad2(dt.getDate())}`; };
+
+// 컨트롤 추이 선 그래프. (x, y)에서 w × h 영역을 쓴다. 앱의 히스토리 그래프와 같은 규칙(100% 기준선, 잡음/못 잡음 색).
+function drawTrend(ctx, trend, x, y, w, h) {
+  const vals = trend.map(r => r.c * 100);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 4) { lo -= 2; hi += 2; }
+  const padY = (hi - lo) * 0.12; lo -= padY; hi += padY;
+
+  ctx.fillStyle = C.dim;
+  ctx.font = `500 24px ${SANS}`;
+  ctx.textAlign = 'left';
+  ctx.fillText(`컨트롤 추이 · 최근 ${trend.length}회`, x, y);
+
+  const top = y + 30, R = 100, bottom = y + h - 34, iw = w - R, ih = bottom - top;
+  const px = i => x + (i / (trend.length - 1)) * iw;
+  const py = v => top + ih - (v - lo) / (hi - lo) * ih;
+
+  ctx.font = `500 20px ${MONO}`;
+  if (100 > lo && 100 < hi) {
+    ctx.save();
+    ctx.strokeStyle = C.gold; ctx.globalAlpha = 0.7; ctx.lineWidth = 2; ctx.setLineDash([8, 8]);
+    ctx.beginPath(); ctx.moveTo(x, py(100)); ctx.lineTo(x + iw, py(100)); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = C.gold;
+    ctx.fillText('100%', x + iw + 14, py(100) + 7);
+  }
+
+  ctx.strokeStyle = C.violet; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  vals.forEach((v, i) => (i ? ctx.lineTo(px(i), py(v)) : ctx.moveTo(px(i), py(v))));
+  ctx.stroke();
+  vals.forEach((v, i) => {
+    const last = i === vals.length - 1;
+    ctx.beginPath();
+    ctx.arc(px(i), py(v), last ? 9 : 6, 0, Math.PI * 2);
+    ctx.fillStyle = trend[i].cleared ? C.mint : C.hp;
+    ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke();
+  });
+
+  const vi = vals.length - 1;
+  ctx.fillStyle = C.text;
+  ctx.font = `600 24px ${MONO}`;
+  ctx.fillText(f1(vals[vi]) + '%', x + iw + 14, py(vals[vi]) + 8);
+
+  ctx.fillStyle = C.faint;
+  ctx.font = `400 20px ${MONO}`;
+  ctx.fillText(fmtDate(trend[0].ts), x, y + h);
+  ctx.textAlign = 'right';
+  ctx.fillText(fmtDate(trend[vi].ts), x + iw, y + h);
+  ctx.textAlign = 'left';
+}
+const f1 = v => v.toFixed(1);

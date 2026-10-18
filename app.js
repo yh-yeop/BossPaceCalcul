@@ -306,6 +306,8 @@ $('saveImage').addEventListener('click', async () => {
     ctrl: f1(c * 100),
     minRatio: f1(minRatio(c, LIMIT_MIN, dead)),
     url: shareUrl().replace(/^https?:\/\//, ''),
+    // 히스토리에 보이는(필터 적용) 기록이 2개 이상이면 추이 그래프를 함께 그린다
+    trend: filteredRecords().slice().sort((a, b) => a.ts - b.ts).slice(-12).map(r => ({ c: r.c, cleared: r.cleared, ts: r.ts })),
   });
   if (!blob) { toast('이미지를 만들지 못했습니다'); return; }
   const name = `boss-pace-${(boss || f1(ratio)).replace(/[\\/:*?"<>|\s]+/g, '_')}.png`;
