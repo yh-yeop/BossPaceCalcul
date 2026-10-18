@@ -1,5 +1,6 @@
 import {
   LIMIT_MIN, analyze, predict, requiredControl, minRatio, clamp, fmtTime, fmtTimeKo, parseTime,
+  partyRatio, partyShares, partyNeedRatio,
 } from './calc.js';
 import { renderCard } from './share.js';
 
@@ -17,6 +18,7 @@ const el = {
   outRatio: $('outRatio'), outTime: $('outTime'),
   feelList: $('feelList'), toast: $('toast'),
   histList: $('histList'), histChart: $('histChart'),
+  partyList: $('partyList'), partyOut: $('partyOut'),
 };
 
 const STATE_KEY = 'bpc:state';
@@ -123,6 +125,7 @@ function update() {
   el.ctrlSync.hidden = !ctrlOverride;
   renderGoal();
   renderFeel();
+  renderParty();
   persist();
 }
 
@@ -319,6 +322,103 @@ $('saveImage').addEventListener('click', async () => {
   toast('이미지를 저장했습니다');
 });
 
+/* ---------- 파티 ---------- */
+// 파티원 목록은 입력 상태와 별도로 저장한다. 2~6명.
+const PARTY_KEY = 'bpc:party';
+const PARTY_MIN = 2, PARTY_MAX = 6;
+let party = load(PARTY_KEY, null);
+if (!Array.isArray(party) || party.length < PARTY_MIN) party = [{ name: '나', ratio: '' }, { name: '', ratio: '' }];
+party = party.slice(0, PARTY_MAX).map(m => ({ name: String(m?.name ?? ''), ratio: String(m?.ratio ?? '') }));
+
+function partyMembers() {
+  return party.map(m => ({ name: m.name.trim(), ratio: parseFloat(m.ratio) }));
+}
+
+function renderPartyList() {
+  el.partyList.innerHTML = partyShares(partyMembers()).map((m, i) => `<li>
+    <input type="text" data-pi="${i}" data-k="name" value="${esc(party[i].name)}" maxlength="16" placeholder="파티원 ${i + 1}" aria-label="파티원 ${i + 1} 이름" autocomplete="off" />
+    <input type="number" data-pi="${i}" data-k="ratio" value="${esc(party[i].ratio)}" step="0.1" min="0" inputmode="decimal" placeholder="배율" aria-label="파티원 ${i + 1} 배율" />
+    <span class="p-share">${m.share > 0 ? f1(m.share * 100) + '%' : '—'}</span>
+    <button type="button" class="p-del" data-pdel="${i}" aria-label="파티원 삭제" title="삭제"${party.length <= PARTY_MIN ? ' disabled' : ''}>×</button>
+  </li>`).join('');
+  $('partyAdd').disabled = party.length >= PARTY_MAX;
+}
+
+function renderParty() {
+  const members = partyMembers();
+  const total = partyRatio(members);
+  const c = baseControl();
+  const dead = deadBase();
+  const dn = deadNote(dead);
+  const out = el.partyOut;
+
+  // 기여 칸만 갱신 (입력 중 포커스를 잃지 않게 전체 목록은 다시 그리지 않는다)
+  partyShares(members).forEach((m, i) => {
+    const sp = el.partyList.querySelectorAll('.p-share')[i];
+    if (sp) sp.textContent = m.share > 0 ? f1(m.share * 100) + '%' : '—';
+  });
+
+  if (!(total > 0)) { out.innerHTML = '<p class="empty">파티원 배율을 입력하면 합산 배율이 나옵니다.</p>'; return; }
+  let html = kv('합산 배율', f1(total), '', `${members.filter(m => m.ratio > 0).length}명 · 20분 기준 보스 hp 대비 %`);
+  if (!(c > 0)) {
+    html += kv('예상 결과', '—', '', '기준 컨트롤(02)이 있어야 계산됩니다.');
+    out.innerHTML = html;
+    return;
+  }
+  const p = predict(total, c, dead);
+  const need = partyNeedRatio(members, c, LIMIT_MIN, dead);
+  const needCtrl = requiredControl(total, LIMIT_MIN, dead);
+  if (p.cleared) {
+    html += kv('예상 클리어 타임', fmtTime(p.timeMin), '', `체감 배율 ${f1(total * c)} · 20분보다 ${fmtTimeKo(LIMIT_MIN - p.timeMin)} 여유${dn ? ` · ${dn}` : ''}`, 'ok-text');
+    html += kv('20분 컷에 더 필요한 배율', '0', '', `배율 ${f1(total - minRatio(c, LIMIT_MIN, dead))} 여유`, 'ok-text');
+  } else {
+    html += kv('20분 종료 시 남은 hp', f1(p.hpLeft), '%', `체감 배율 ${f1(total * c)} · 잡으려면 약 ${fmtTime(p.timeMin)} 필요${dn ? ` · ${dn}` : ''}`, 'no-text');
+    html += kv('20분 컷에 더 필요한 배율', f1(need), '', isFinite(need) ? `합산 ${f1(total + need)} 이상이면 20분 컷` : '딜 불가 시간이 20분 이상', 'no-text');
+  }
+  html += kv('파티 필요 컨트롤 (20분 컷)', f1(needCtrl * 100), '%',
+    !isFinite(needCtrl) ? '불가' : c >= needCtrl ? `기준 컨트롤보다 ${f1((c - needCtrl) * 100)}%p 낮아도 됨` : `기준 컨트롤보다 ${f1((needCtrl - c) * 100)}%p 더 필요`);
+  html += '<div class="party-bars">' + partyShares(members).map((m, i) => ({ ...m, i })).filter(m => m.ratio > 0).map(m => `<div class="pb">
+    <span class="pb-name">${esc(m.name || `파티원 ${m.i + 1}`)}</span>
+    <span class="pb-track"><span class="pb-fill" style="width:${(m.share * 100).toFixed(1)}%"></span></span>
+    <span class="pb-pct">${f1(m.share * 100)}%</span>
+  </div>`).join('') + '</div>';
+  out.innerHTML = html;
+}
+
+function persistParty() { save(PARTY_KEY, party); }
+
+el.partyList.addEventListener('input', e => {
+  const i = e.target.dataset.pi, k = e.target.dataset.k;
+  if (i == null || !k) return;
+  party[i][k] = e.target.value;
+  persistParty();
+  renderParty();
+});
+el.partyList.addEventListener('click', e => {
+  const b = e.target.closest('[data-pdel]');
+  if (!b || party.length <= PARTY_MIN) return;
+  party.splice(Number(b.dataset.pdel), 1);
+  persistParty();
+  renderPartyList();
+  renderParty();
+});
+$('partyAdd').addEventListener('click', () => {
+  if (party.length >= PARTY_MAX) return;
+  party.push({ name: '', ratio: '' });
+  persistParty();
+  renderPartyList();
+  renderParty();
+  el.partyList.querySelector(`[data-pi="${party.length - 1}"][data-k="name"]`)?.focus();
+});
+$('partyMine').addEventListener('click', () => {
+  const r = num(el.ratio);
+  if (!(r > 0)) { toast('먼저 01 내 기록에 배율을 입력하세요'); return; }
+  party[0] = { name: party[0].name.trim() || '나', ratio: f1(r) };
+  persistParty();
+  renderPartyList();
+  renderParty();
+});
+
 /* ---------- 기록 히스토리 ---------- */
 // 이 브라우저에만 저장된다. 서버 없음.
 const REC_KEY = 'bpc:records';
@@ -446,6 +546,7 @@ el.ctrlIn.addEventListener('input', () => {
   el.ctrlSync.hidden = !ctrlOverride;
   renderGoal();
   renderFeel();
+  renderParty();
 });
 el.ctrlSync.addEventListener('click', () => { ctrlOverride = false; update(); });
 
@@ -453,5 +554,6 @@ const fromUrl = stateFromUrl();
 applyState(load(STATE_KEY, null));
 applyState(fromUrl);
 setTab(goalTab);
+renderPartyList();
 setMode(mode);
 renderHistory();

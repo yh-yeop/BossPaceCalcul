@@ -256,6 +256,31 @@ input[type=number]{-moz-appearance:textfield}
 .feel-list .edge button{border-color:var(--gold-dim)}
 .feel-list .f-feel{font-weight:600}
 .feel-list .empty{font-size:13px;color:var(--text-faint);padding:6px 2px}
+/* 파티 */
+.party-head,.party-list li{display:grid;grid-template-columns:1.4fr 100px 64px 28px;align-items:center;gap:8px}
+.party-head{padding:0 6px 8px;font-size:11.5px;color:var(--text-faint);letter-spacing:.04em}
+.party-head span:nth-child(3),.party-list .p-share{text-align:right}
+.party-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.party-list input[type=text]{font-size:14px;padding:9px 12px}
+.party-list input[type=number]{font-size:16px;padding:9px 12px}
+.party-list .p-share{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim)}
+.party-list .p-del{background:transparent;border:0;color:var(--text-faint);font-size:16px;cursor:pointer;padding:8px 6px;border-radius:6px;line-height:1;font-family:inherit}
+.party-list .p-del:hover:not(:disabled){color:var(--hp)}
+.party-list .p-del:disabled{opacity:.3;cursor:default}
+.party-tools{display:flex;gap:8px;margin:10px 0 16px}
+.party-tools .btn{padding:7px 12px}
+.party-out{margin-top:0}
+.party-bars{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.party-bars .pb{display:grid;grid-template-columns:1.2fr 3fr 52px;align-items:center;gap:10px;font-size:12px}
+.party-bars .pb-name{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.party-bars .pb-track{height:8px;border-radius:4px;background:var(--ink);border:1px solid var(--line-soft);overflow:hidden}
+.party-bars .pb-fill{height:100%;background:var(--violet);border-radius:4px}
+.party-bars .pb-pct{text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--text)}
+@media(max-width:440px){
+  .party-head,.party-list li{grid-template-columns:1.2fr 78px 50px 24px;gap:5px}
+  .party-bars .pb{grid-template-columns:1fr 2fr 48px}
+}
+
 /* 기록 히스토리 */
 .hist-head{display:grid;grid-template-columns:70px 1.4fr 1fr 70px 28px;align-items:center;gap:8px}
 .hist-list li{display:grid;grid-template-columns:1fr 28px;align-items:center;gap:0}

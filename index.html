@@ -153,9 +153,23 @@
     <ul class="feel-list" id="feelList"></ul>
   </section>
 
-  <!-- 4. 기록 히스토리 -->
+  <!-- 4. 파티 -->
+  <section class="card" aria-labelledby="partyTitle">
+    <h2 class="card-title" id="partyTitle"><span>04</span>파티로 가면?</h2>
+    <p class="card-sub">배율은 20분 기준 보스 hp 대비 %라, 파티원 배율을 더한 값이 <b>합산 배율</b>입니다. 기준 컨트롤(02)로 합산 배율을 상대하면 어떻게 되는지 봅니다.</p>
+
+    <div class="party-head" aria-hidden="true"><span>파티원</span><span>배율</span><span>기여</span><span></span></div>
+    <ul class="party-list" id="partyList"></ul>
+    <div class="party-tools">
+      <button type="button" class="btn ghost" id="partyAdd">+ 파티원 추가</button>
+      <button type="button" class="btn ghost" id="partyMine" title="01 내 기록의 배율을 첫 줄에 넣습니다">내 배율 넣기</button>
+    </div>
+    <div class="goal-out party-out" id="partyOut"></div>
+  </section>
+
+  <!-- 5. 기록 히스토리 -->
   <section class="card" aria-labelledby="histTitle">
-    <h2 class="card-title" id="histTitle"><span>04</span>기록 히스토리</h2>
+    <h2 class="card-title" id="histTitle"><span>05</span>기록 히스토리</h2>
     <p class="card-sub">결과 아래 <b>기록 저장</b>을 누르면 이 브라우저에 쌓입니다. 컨트롤이 어떻게 변해 왔는지 보고, 행을 누르면 그 기록을 다시 불러옵니다.</p>
     <div class="hist-chart" id="histChart" hidden></div>
     <div class="hist-head" aria-hidden="true"><span>날짜</span><span>보스 · 배율</span><span>결과</span><span>컨트롤</span><span></span></div>
@@ -164,7 +178,7 @@
 
   <footer>
     이상 속도 = <code>배율 ÷ 20</code> %/분 · 실제 속도 = <code>진행% ÷ (걸린 분 − 딜 불가 분)</code> · 컨트롤 = <code>실제 ÷ 이상</code><br>
-    체감 배율 = <code>배율 × 컨트롤비율</code> · 최소 배율 = <code>100 ÷ 컨트롤비율</code><br>
+    체감 배율 = <code>배율 × 컨트롤비율</code> · 최소 배율 = <code>100 ÷ 컨트롤비율</code> · 파티 합산 배율 = <code>Σ 파티원 배율</code><br>
     예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율) + 딜 불가 분</code><br>
     전투 내내 같은 페이스를 유지한다는 가정입니다.
   </footer>
