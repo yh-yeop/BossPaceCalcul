@@ -170,7 +170,14 @@
   <!-- 5. 기록 히스토리 -->
   <section class="card" aria-labelledby="histTitle">
     <h2 class="card-title" id="histTitle"><span>05</span>기록 히스토리</h2>
-    <p class="card-sub">결과 아래 <b>기록 저장</b>을 누르면 이 브라우저에 쌓입니다. 컨트롤이 어떻게 변해 왔는지 보고, 행을 누르면 그 기록을 다시 불러옵니다.</p>
+    <p class="card-sub">결과 아래 <b>기록 저장</b>을 누르면 이 브라우저에 쌓입니다. 컨트롤이 어떻게 변해 왔는지 보고, 행을 누르면 그 기록을 다시 불러옵니다. 브라우저를 바꾸면 사라지니 <b>내보내기</b>로 JSON 파일을 받아 두세요.</p>
+    <div class="hist-tools">
+      <select id="histFilter" aria-label="보스 필터"><option value="">전체 보스</option></select>
+      <button type="button" class="btn ghost" id="histExport">내보내기</button>
+      <button type="button" class="btn ghost" id="histImportBtn">가져오기</button>
+      <input type="file" id="histImport" accept=".json,application/json" hidden />
+    </div>
+    <div class="hist-summary" id="histSummary" hidden></div>
     <div class="hist-chart" id="histChart" hidden></div>
     <div class="hist-head" aria-hidden="true"><span>날짜</span><span>보스 · 배율</span><span>결과</span><span>컨트롤</span><span></span></div>
     <ul class="hist-list" id="histList"></ul>

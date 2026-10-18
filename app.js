@@ -1,6 +1,6 @@
 import {
   LIMIT_MIN, analyze, predict, requiredControl, minRatio, clamp, fmtTime, fmtTimeKo, parseTime,
-  partyRatio, partyShares, partyNeedRatio,
+  partyRatio, partyShares, partyNeedRatio, REC_MAX, sanitizeRecords, mergeRecords, summarizeRecords,
 } from './calc.js';
 import { renderCard } from './share.js';
 
@@ -17,7 +17,7 @@ const el = {
   goalRatio: $('goalRatio'), goalMin: $('goalMin'), goalSec: $('goalSec'),
   outRatio: $('outRatio'), outTime: $('outTime'),
   feelList: $('feelList'), toast: $('toast'),
-  histList: $('histList'), histChart: $('histChart'),
+  histList: $('histList'), histChart: $('histChart'), histFilter: $('histFilter'), histSummary: $('histSummary'),
   partyList: $('partyList'), partyOut: $('partyOut'),
 };
 
@@ -422,10 +422,9 @@ $('partyMine').addEventListener('click', () => {
 /* ---------- 기록 히스토리 ---------- */
 // 이 브라우저에만 저장된다. 서버 없음.
 const REC_KEY = 'bpc:records';
-const REC_MAX = 60;
-let records = load(REC_KEY, []);
-if (!Array.isArray(records)) records = [];
-records = records.filter(r => r && isFinite(r.ts) && isFinite(r.c) && r.c > 0);
+let records = sanitizeRecords(load(REC_KEY, [])) || [];
+let histFilter = ''; // '' = 전체, NO_BOSS = 이름 없는 기록, 그 외 보스 이름
+const NO_BOSS = '\u0000';
 
 const pad2 = n => String(n).padStart(2, '0');
 const fmtDate = ts => { const d = new Date(ts); return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`; };
@@ -460,13 +459,46 @@ function sparkline(rs) {
   return parts.join('');
 }
 
+// 보스 필터 select: 기록에 있는 이름 목록 + 전체
+function renderHistFilter() {
+  const names = [...new Set(records.map(r => r.boss).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+  const hasNone = records.some(r => !r.boss);
+  if (histFilter && histFilter !== NO_BOSS && !names.includes(histFilter)) histFilter = '';
+  if (histFilter === NO_BOSS && !hasNone) histFilter = '';
+  el.histFilter.innerHTML = [`<option value="">전체 보스 (${records.length})</option>`]
+    .concat(names.map(n => `<option value="${esc(n)}">${esc(n)} (${records.filter(r => r.boss === n).length})</option>`))
+    .concat(hasNone ? [`<option value="${NO_BOSS}">이름 없음 (${records.filter(r => !r.boss).length})</option>`] : [])
+    .join('');
+  el.histFilter.value = histFilter;
+  el.histFilter.disabled = !records.length;
+}
+
+function filteredRecords() {
+  if (!histFilter) return records;
+  return records.filter(r => (histFilter === NO_BOSS ? !r.boss : r.boss === histFilter));
+}
+
+function renderHistSummary(rs) {
+  const { count, best, latest } = summarizeRecords(rs);
+  el.histSummary.hidden = !count;
+  if (!count) return;
+  const res = r => (r.cleared ? fmtTime(r.timeMin) : `hp ${f1(r.hpLeft)}%`);
+  const who = histFilter ? '' : (best.boss ? `${esc(best.boss)} ` : '');
+  el.histSummary.innerHTML =
+    `<dl class="hs best"><dt>최고 컨트롤${histFilter && histFilter !== NO_BOSS ? ` · ${esc(histFilter)}` : ''}</dt><dd>${f1(best.c * 100)}%<small>${who}${f1(best.ratio)} · ${res(best)} · ${fmtDate(best.ts)}</small></dd></dl>` +
+    `<dl class="hs"><dt>최근 기록 · ${count}회 중</dt><dd>${f1(latest.c * 100)}%<small>${f1(latest.ratio)} · ${res(latest)} · ${fmtDate(latest.ts)}</small></dd></dl>`;
+}
+
 function renderHistory() {
-  if (!records.length) {
-    el.histList.innerHTML = '<li class="empty">저장된 기록이 없습니다.</li>';
+  renderHistFilter();
+  const rs = filteredRecords();
+  renderHistSummary(rs);
+  if (!rs.length) {
+    el.histList.innerHTML = `<li class="empty">${records.length ? '이 보스의 기록이 없습니다.' : '저장된 기록이 없습니다.'}</li>`;
     el.histChart.hidden = true;
     return;
   }
-  const byTime = records.slice().sort((a, b) => a.ts - b.ts);
+  const byTime = rs.slice().sort((a, b) => a.ts - b.ts);
   el.histChart.hidden = byTime.length < 2;
   if (!el.histChart.hidden) el.histChart.innerHTML = sparkline(byTime);
   el.histList.innerHTML = byTime.slice().reverse().map(r => {
@@ -524,6 +556,39 @@ el.histList.addEventListener('click', e => {
   if (!b) return;
   const r = records.find(x => String(x.ts) === b.dataset.load);
   if (r) loadRecord(r);
+});
+el.histFilter.addEventListener('change', () => { histFilter = el.histFilter.value; renderHistory(); });
+
+// JSON 내보내기 / 가져오기 — 브라우저를 바꿔도 기록을 옮길 수 있게
+$('histExport').addEventListener('click', () => {
+  if (!records.length) { toast('저장된 기록이 없습니다'); return; }
+  const payload = { app: 'BossPaceCalcul', version: 1, exported: new Date().toISOString(), records };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'boss-pace-records.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast(`기록 ${records.length}개를 내보냈습니다`);
+});
+$('histImportBtn').addEventListener('click', () => $('histImport').click());
+$('histImport').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+  let incoming = null;
+  try {
+    const parsed = JSON.parse(await file.text());
+    incoming = sanitizeRecords(Array.isArray(parsed) ? parsed : parsed?.records);
+  } catch { /* 아래에서 안내 */ }
+  if (!incoming) { toast('기록 파일 형식이 아닙니다 (boss-pace-records.json)'); return; }
+  const had = new Set(records.map(r => r.ts));
+  const merged = mergeRecords(records, incoming, REC_MAX);
+  const added = merged.filter(r => !had.has(r.ts)).length;
+  records = merged;
+  save(REC_KEY, records);
+  renderHistory();
+  toast(added > 0 ? `기록 ${added}개를 가져왔습니다 (중복 ${incoming.length - added}개 제외)` : '새로 가져온 기록이 없습니다 (모두 중복)');
 });
 
 /* ---------- 초기화 ---------- */
