@@ -17,12 +17,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<script>
+  // 첫 그리기 전에 저장된 테마를 적용해 깜빡임을 막는다
+  try { const t = localStorage.getItem('bpc:theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">20분 기준 · 보스 페이스</p>
+    <div class="top-row">
+      <p class="eyebrow">20분 기준 · 보스 페이스</p>
+      <button type="button" class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환">◐</button>
+    </div>
     <h1>배율 대비 <em>내 컨트롤</em>은<br>몇 퍼센트인가</h1>
     <p class="sub">배율은 20분 동안 뽑아야 할 이상적인 딜량(%)입니다. 실제 기록을 넣으면 그 이상치를 얼마나 따라갔는지, 그리고 어느 배율까지 20분 컷이 되는지 나옵니다.</p>
   </header>

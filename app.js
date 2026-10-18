@@ -441,21 +441,22 @@ function sparkline(rs) {
   const x = i => L + (rs.length === 1 ? iw / 2 : i / (rs.length - 1) * iw);
   const y = v => T + ih - (v - lo) / (hi - lo) * ih;
   const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  // 색은 테마를 따르도록 CSS 클래스(.hc-*)로 준다
   const parts = [`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="컨트롤 추이 그래프">`];
   // 100% = 배율과 같은 페이스
   if (100 > lo && 100 < hi) {
-    parts.push(`<line x1="${L}" y1="${y(100).toFixed(1)}" x2="${L + iw}" y2="${y(100).toFixed(1)}" stroke="#E8B75C" stroke-width="1" stroke-dasharray="4 4" opacity=".7"/>`);
-    parts.push(`<text x="${L + iw + 6}" y="${(y(100) + 4).toFixed(1)}" fill="#E8B75C" font-size="11" font-family="IBM Plex Mono,monospace">100%</text>`);
+    parts.push(`<line class="hc-base" x1="${L}" y1="${y(100).toFixed(1)}" x2="${L + iw}" y2="${y(100).toFixed(1)}" stroke-width="1" stroke-dasharray="4 4"/>`);
+    parts.push(`<text class="hc-base-label" x="${L + iw + 6}" y="${(y(100) + 4).toFixed(1)}" font-size="11">100%</text>`);
   }
-  parts.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="#8E7BE8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+  parts.push(`<polyline class="hc-line" points="${pts.join(' ')}" fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
   vals.forEach((v, i) => {
     const last = i === vals.length - 1;
-    parts.push(`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${last ? 4.5 : 3}" fill="${rs[i].cleared ? '#4FD1A5' : '#E2574C'}" stroke="#150F1E" stroke-width="1.5"/>`);
+    parts.push(`<circle class="${rs[i].cleared ? 'hc-ok' : 'hc-no'}" cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${last ? 4.5 : 3}" stroke-width="1.5"/>`);
   });
   const vi = vals.length - 1;
-  parts.push(`<text x="${L + iw + 6}" y="${(y(vals[vi]) + 4).toFixed(1)}" fill="#EDE7F7" font-size="12" font-weight="600" font-family="IBM Plex Mono,monospace">${f1(vals[vi])}</text>`);
-  parts.push(`<text x="${L}" y="${H - 6}" fill="#6F6291" font-size="11" font-family="IBM Plex Mono,monospace">${fmtDate(rs[0].ts)}</text>`);
-  parts.push(`<text x="${L + iw}" y="${H - 6}" text-anchor="end" fill="#6F6291" font-size="11" font-family="IBM Plex Mono,monospace">${fmtDate(rs[vi].ts)} · ${rs.length}회</text>`);
+  parts.push(`<text class="hc-val" x="${L + iw + 6}" y="${(y(vals[vi]) + 4).toFixed(1)}" font-size="12" font-weight="600">${f1(vals[vi])}</text>`);
+  parts.push(`<text class="hc-axis" x="${L}" y="${H - 6}" font-size="11">${fmtDate(rs[0].ts)}</text>`);
+  parts.push(`<text class="hc-axis" x="${L + iw}" y="${H - 6}" text-anchor="end" font-size="11">${fmtDate(rs[vi].ts)} · ${rs.length}회</text>`);
   parts.push('</svg>');
   return parts.join('');
 }
@@ -598,6 +599,31 @@ $('histImport').addEventListener('change', async e => {
   renderHistory();
   toast(added > 0 ? `기록 ${added}개를 가져왔습니다 (중복 ${incoming.length - added}개 제외)` : '새로 가져온 기록이 없습니다 (모두 중복)');
 });
+
+/* ---------- 테마 ---------- */
+// 기본은 시스템 설정(prefers-color-scheme), 버튼으로 바꾸면 bpc:theme 에 저장.
+// 첫 그리기 전 적용은 index.html 의 인라인 스크립트가 한다.
+const THEME_KEY = 'bpc:theme';
+const lightQuery = matchMedia('(prefers-color-scheme: light)');
+function currentTheme() {
+  return document.documentElement.dataset.theme || (lightQuery.matches ? 'light' : 'dark');
+}
+function syncThemeUi() {
+  const t = currentTheme();
+  const btn = $('themeBtn');
+  btn.setAttribute('aria-label', t === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환');
+  btn.title = btn.getAttribute('aria-label');
+  const meta = document.querySelector('meta[name=theme-color]');
+  if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || meta.content;
+}
+$('themeBtn').addEventListener('click', () => {
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem(THEME_KEY, next); } catch { /* 저장 불가 환경 무시 */ }
+  syncThemeUi();
+});
+lightQuery.addEventListener('change', syncThemeUi);
+syncThemeUi();
 
 /* ---------- 초기화 ---------- */
 [25, 50, 75].forEach(p => {
