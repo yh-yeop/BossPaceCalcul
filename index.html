@@ -63,6 +63,15 @@
       <input type="number" id="hpLeft" value="24.7" step="0.1" min="0" max="100" inputmode="decimal" />
     </div>
 
+    <div class="field">
+      <label for="deadMin">딜 불가 시간 <span class="hint">— 선택, 분 : 초 · 무적·컷신 등 딜을 못 넣은 시간</span></label>
+      <div class="time-row">
+        <input type="number" id="deadMin" value="0" min="0" max="20" inputmode="numeric" aria-label="분" />
+        <span class="colon">:</span>
+        <input type="number" id="deadSec" value="0" min="0" max="59" inputmode="numeric" aria-label="초" />
+      </div>
+    </div>
+
     <div class="track-block">
       <div class="track-head"><span>00:00</span><span>20:00</span></div>
       <div class="track" id="track">
@@ -154,9 +163,9 @@
   </section>
 
   <footer>
-    이상 속도 = <code>배율 ÷ 20</code> %/분 · 실제 속도 = <code>진행% ÷ 걸린 분</code> · 컨트롤 = <code>실제 ÷ 이상</code><br>
+    이상 속도 = <code>배율 ÷ 20</code> %/분 · 실제 속도 = <code>진행% ÷ (걸린 분 − 딜 불가 분)</code> · 컨트롤 = <code>실제 ÷ 이상</code><br>
     체감 배율 = <code>배율 × 컨트롤비율</code> · 최소 배율 = <code>100 ÷ 컨트롤비율</code><br>
-    예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율)</code> 분<br>
+    예상 시간 = <code>2000 ÷ (배율 × 컨트롤비율) + 딜 불가 분</code><br>
     전투 내내 같은 페이스를 유지한다는 가정입니다.
   </footer>
 
