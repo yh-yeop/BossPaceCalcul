@@ -3,6 +3,7 @@ import {
   partyRatio, partyShares, partyNeedRatio, REC_MAX, sanitizeRecords, mergeRecords, summarizeRecords,
 } from './calc.js';
 import { renderCard } from './share.js';
+import { BOSS_NAMES } from './data.js';
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -489,7 +490,14 @@ function renderHistSummary(rs) {
     `<dl class="hs"><dt>최근 기록 · ${count}회 중</dt><dd>${f1(latest.c * 100)}%<small>${f1(latest.ratio)} · ${res(latest)} · ${fmtDate(latest.ts)}</small></dd></dl>`;
 }
 
+// 보스 이름 자동완성: 기록에 있는 이름을 앞에, 기본 목록을 뒤에
+function renderBossList() {
+  const names = [...new Set(records.map(r => r.boss).filter(Boolean).reverse().concat(BOSS_NAMES))];
+  $('bossList').innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+}
+
 function renderHistory() {
+  renderBossList();
   renderHistFilter();
   const rs = filteredRecords();
   renderHistSummary(rs);
