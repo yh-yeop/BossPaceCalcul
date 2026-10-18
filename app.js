@@ -658,3 +658,10 @@ setTab(goalTab);
 renderPartyList();
 setMode(mode);
 renderHistory();
+
+// 오프라인 캐시. file:// 로 열었을 때는 등록할 수 없으므로 http/https 일 때만.
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* 등록 실패해도 앱은 동작 */ });
+  });
+}
