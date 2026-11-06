@@ -1,7 +1,7 @@
 // 오프라인 캐시. 정적 파일을 설치 때 미리 받아 두고(precache), 이후 요청은
 // 캐시를 먼저 돌려주면서 뒤에서 새로 받아 갱신한다(stale-while-revalidate).
 // 파일을 바꿔 배포할 때 VERSION 을 올리면 activate 때 옛 캐시를 지운다.
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `bpc-${VERSION}`;
 const PRECACHE = [
   './index.html', './style.css', './app.js', './calc.js', './share.js', './data.js',
