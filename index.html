@@ -29,16 +29,15 @@
 
   <header>
     <div class="top-row">
-      <p class="eyebrow">20분 기준 · 보스 페이스</p>
+      <h1>배율 페이스 계산기</h1>
       <button type="button" class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환">◐</button>
     </div>
-    <h1>배율 대비 <em>내 컨트롤</em>은<br>몇 퍼센트인가</h1>
     <p class="sub">배율은 20분 동안 뽑아야 할 이상적인 딜량(%)입니다. 실제 기록을 넣으면 그 이상치를 얼마나 따라갔는지, 그리고 어느 배율까지 20분 컷이 되는지 나옵니다.</p>
   </header>
 
   <!-- 1. 내 기록 -->
   <section class="card" aria-labelledby="recTitle">
-    <h2 class="card-title" id="recTitle"><span>01</span>내 기록</h2>
+    <h2 class="card-title" id="recTitle">내 기록</h2>
 
     <div class="field">
       <label for="boss">보스 이름 <span class="hint">— 선택, 공유 이미지에 표시</span></label>
@@ -118,7 +117,7 @@
 
   <!-- 2. 역계산 -->
   <section class="card" aria-labelledby="goalTitle">
-    <h2 class="card-title" id="goalTitle"><span>02</span>목표 계산</h2>
+    <h2 class="card-title" id="goalTitle">목표 계산</h2>
 
     <div class="field">
       <label for="ctrlIn">기준 컨트롤 <span class="hint">— %, 기본값은 위 기록</span></label>
@@ -156,7 +155,7 @@
 
   <!-- 3. 체감 배율 -->
   <section class="card" aria-labelledby="feelTitle">
-    <h2 class="card-title" id="feelTitle"><span>03</span>이 컨트롤이면 체감 배율은?</h2>
+    <h2 class="card-title" id="feelTitle">이 컨트롤이면 체감 배율은?</h2>
     <p class="card-sub">체감 배율 = <code>배율 × 컨트롤</code>. 기준 컨트롤로 싸우면 그 배율 보스가 실제로는 배율 몇짜리처럼 느껴지는지입니다. 체감 100 이상이면 20분 컷. 행을 누르면 목표 계산에서 자세히 봅니다.</p>
 
     <div class="feel-head" aria-hidden="true"><span>배율</span><span>체감 배율</span><span>예상 결과</span></div>
@@ -165,7 +164,7 @@
 
   <!-- 4. 파티 -->
   <section class="card" aria-labelledby="partyTitle">
-    <h2 class="card-title" id="partyTitle"><span>04</span>파티로 가면?</h2>
+    <h2 class="card-title" id="partyTitle">파티로 가면?</h2>
     <p class="card-sub">배율은 20분 기준 보스 hp 대비 %라, 파티원 배율을 더한 값이 <b>합산 배율</b>입니다. 기준 컨트롤(02)로 합산 배율을 상대하면 어떻게 되는지 봅니다.</p>
 
     <div class="party-head" aria-hidden="true"><span>파티원</span><span>배율</span><span>기여</span><span></span></div>
@@ -179,7 +178,7 @@
 
   <!-- 5. 기록 히스토리 -->
   <section class="card" aria-labelledby="histTitle">
-    <h2 class="card-title" id="histTitle"><span>05</span>기록 히스토리</h2>
+    <h2 class="card-title" id="histTitle">기록 히스토리</h2>
     <p class="card-sub">결과 아래 <b>기록 저장</b>을 누르면 이 브라우저에 쌓입니다. 컨트롤이 어떻게 변해 왔는지 보고, 행을 누르면 그 기록을 다시 불러옵니다. 브라우저를 바꾸면 사라지니 <b>내보내기</b>로 JSON 파일을 받아 두세요.</p>
     <div class="hist-tools">
       <select id="histFilter" aria-label="보스 필터"><option value="">전체 보스</option></select>

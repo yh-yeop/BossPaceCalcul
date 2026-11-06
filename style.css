@@ -85,9 +85,9 @@ body{
 .wrap{width:100%;max-width:620px}
 [hidden]{display:none!important}
 
-header{margin-bottom:36px}
+header{margin-bottom:28px}
 .top-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
-.top-row .eyebrow{flex:1;margin-bottom:0}
+.top-row h1{flex:1}
 .icon-btn{
   width:36px;height:36px;flex:none;
   background:var(--panel);border:1px solid var(--line);border-radius:10px;
@@ -96,24 +96,7 @@ header{margin-bottom:36px}
 }
 .icon-btn:hover{color:var(--text);border-color:var(--gold-dim)}
 .icon-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.eyebrow{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:11px;
-  letter-spacing:.22em;
-  text-transform:uppercase;
-  color:var(--gold);
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:12px;
-}
-.eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent)}
-h1{
-  font-family:'Black Han Sans',sans-serif;
-  font-weight:400;
-  font-size:clamp(30px,7vw,42px);
-  letter-spacing:-.01em;
-  line-height:1.15;
-}
-h1 em{font-style:normal;color:var(--gold)}
+h1{font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
 .sub{color:var(--text-dim);font-size:14px;margin-top:8px}
 
 .card{
@@ -126,12 +109,8 @@ h1 em{font-style:normal;color:var(--gold)}
 }
 .card + .card, .share-bar + .card{margin-top:28px}
 .card-title{
-  font-size:15px;font-weight:600;letter-spacing:.02em;
+  font-size:16px;font-weight:600;
   margin-bottom:18px;display:flex;align-items:center;gap:10px;
-}
-.card-title span{
-  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;
-  color:var(--gold);letter-spacing:.1em;
 }
 .card-sub{font-size:13px;color:var(--text-faint);margin:-10px 0 16px}
 
@@ -141,7 +120,6 @@ label{
   display:block;
   font-size:12px;
   font-weight:500;
-  letter-spacing:.04em;
   color:var(--text-dim);
   margin-bottom:8px;
 }
@@ -210,7 +188,7 @@ input[type=number]{-moz-appearance:textfield}
 /* 20분 트랙 */
 .track-block{margin:26px 0 4px}
 .track-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
-.track-head span{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--text-faint)}
+.track-head span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-faint)}
 .track{
   position:relative;
   height:34px;
@@ -222,12 +200,12 @@ input[type=number]{-moz-appearance:textfield}
 .tick{position:absolute;top:0;bottom:0;width:1px;background:var(--line-soft)}
 .fill{
   position:absolute;top:0;bottom:0;left:0;
-  background:linear-gradient(90deg,rgba(var(--violet-rgb),.28),rgba(var(--violet-rgb),.5));
+  background:rgba(var(--violet-rgb),.4);
   border-right:2px solid var(--violet);
   transition:width .35s cubic-bezier(.4,0,.2,1);
 }
-.fill.done{background:linear-gradient(90deg,rgba(var(--mint-rgb),.25),rgba(var(--mint-rgb),.45));border-right-color:var(--mint)}
-.fill.short{background:linear-gradient(90deg,rgba(var(--hp-rgb),.22),rgba(var(--hp-rgb),.4));border-right-color:var(--hp)}
+.fill.done{background:rgba(var(--mint-rgb),.38);border-right-color:var(--mint)}
+.fill.short{background:rgba(var(--hp-rgb),.32);border-right-color:var(--hp)}
 .ideal{
   position:absolute;top:-2px;bottom:-2px;width:2px;
   background:var(--gold);
@@ -236,7 +214,7 @@ input[type=number]{-moz-appearance:textfield}
 .ideal::after{
   content:"이상";
   position:absolute;top:-17px;left:50%;transform:translateX(-50%);
-  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--gold);
+  font-size:11px;color:var(--gold);
 }
 .track-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:24px;font-size:12px;color:var(--text-faint)}
 .track-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px}
@@ -252,10 +230,8 @@ input[type=number]{-moz-appearance:textfield}
   overflow:hidden;
   box-shadow:var(--shadow);
 }
-.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--violet)}
-.stat.gold::before{background:var(--gold)}
 .stat h3{
-  font-size:12px;font-weight:500;letter-spacing:.05em;
+  font-size:13px;font-weight:500;
   color:var(--text-dim);margin-bottom:10px;
 }
 .big{
@@ -310,7 +286,7 @@ input[type=number]{-moz-appearance:textfield}
 .feel-head,.feel-list button{
   display:grid;grid-template-columns:1.3fr 1fr 1fr;align-items:center;gap:8px;
 }
-.feel-head{padding:0 14px 8px;font-size:11.5px;color:var(--text-faint);letter-spacing:.04em}
+.feel-head{padding:0 14px 8px;font-size:12px;color:var(--text-faint)}
 .feel-head span:not(:first-child),.feel-list .f-feel,.feel-list .f-pred{text-align:right}
 .feel-list{list-style:none;display:flex;flex-direction:column;gap:4px}
 .feel-list button{
@@ -326,7 +302,7 @@ input[type=number]{-moz-appearance:textfield}
 .feel-list .empty{font-size:13px;color:var(--text-faint);padding:6px 2px}
 /* 파티 */
 .party-head,.party-list li{display:grid;grid-template-columns:1.4fr 100px 64px 28px;align-items:center;gap:8px}
-.party-head{padding:0 6px 8px;font-size:11.5px;color:var(--text-faint);letter-spacing:.04em}
+.party-head{padding:0 6px 8px;font-size:12px;color:var(--text-faint)}
 .party-head span:nth-child(3),.party-list .p-share{text-align:right}
 .party-list{list-style:none;display:flex;flex-direction:column;gap:6px}
 .party-list input[type=text]{font-size:14px;padding:9px 12px}
@@ -370,7 +346,7 @@ input[type=number]{-moz-appearance:textfield}
 .hist-head{display:grid;grid-template-columns:70px 1.4fr 1fr 70px 28px;align-items:center;gap:8px}
 .hist-list li{display:grid;grid-template-columns:1fr 28px;align-items:center;gap:0}
 .hist-list .hist-row{display:grid;grid-template-columns:70px 1.4fr 1fr 70px;align-items:center;gap:8px}
-.hist-head{padding:0 14px 8px;font-size:11.5px;color:var(--text-faint);letter-spacing:.04em}
+.hist-head{padding:0 14px 8px;font-size:12px;color:var(--text-faint)}
 .hist-head span:nth-child(3),.hist-head span:nth-child(4),.hist-list .h-res,.hist-list .h-ctrl{text-align:right}
 .hist-list{list-style:none;display:flex;flex-direction:column;gap:4px}
 .hist-list li{
