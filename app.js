@@ -364,7 +364,7 @@ function renderParty() {
   if (!(total > 0)) { out.innerHTML = '<p class="empty">파티원 배율을 입력하면 합산 배율이 나옵니다.</p>'; return; }
   let html = kv('합산 배율', f1(total), '', `${members.filter(m => m.ratio > 0).length}명 · 20분 기준 보스 hp 대비 %`);
   if (!(c > 0)) {
-    html += kv('예상 결과', '—', '', '기준 컨트롤(02)이 있어야 계산됩니다.');
+    html += kv('예상 결과', '—', '', '기준 컨트롤이 있어야 계산됩니다.');
     out.innerHTML = html;
     return;
   }
@@ -415,7 +415,7 @@ $('partyAdd').addEventListener('click', () => {
 });
 $('partyMine').addEventListener('click', () => {
   const r = num(el.ratio);
-  if (!(r > 0)) { toast('먼저 01 내 기록에 배율을 입력하세요'); return; }
+  if (!(r > 0)) { toast('먼저 내 기록에 배율을 입력하세요'); return; }
   party[0] = { name: party[0].name.trim() || '나', ratio: f1(r) };
   persistParty();
   renderPartyList();

@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>배율 페이스 계산기</title>
 <meta name="description" content="보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다." />
-<meta name="theme-color" content="#150F1E" />
+<meta name="theme-color" content="#111112" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="배율 페이스 계산기" />
 <meta property="og:description" content="보스 배율 대비 내 컨트롤이 몇 퍼센트인지, 어느 배율까지 20분 컷이 되는지 계산합니다." />
@@ -15,25 +15,25 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <script src="/install.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css" />
 <script>
-  // 첫 그리기 전에 저장된 테마를 적용해 깜빡임을 막는다
+  // 저장된 테마를 첫 그리기 전에 적용 (깜빡임 방지). 없으면 시스템 설정
   try { const t = localStorage.getItem('bpc:theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
 </script>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="top-row">
-      <h1>배율 페이스 계산기</h1>
-      <button type="button" class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환">◐</button>
-    </div>
-    <p class="sub">배율은 20분 동안 뽑아야 할 이상적인 딜량(%)입니다. 실제 기록을 넣으면 그 이상치를 얼마나 따라갔는지, 그리고 어느 배율까지 20분 컷이 되는지 나옵니다.</p>
+  <header class="top">
+    <a class="icon-btn" href="https://yh-yeop.github.io/p/#maple" title="메이플 계산기 모음" aria-label="메이플 계산기 모음">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>
+    </a>
+    <h1 class="brand"><img src="icon.svg" alt="">배율 페이스 계산기</h1>
+    <button type="button" class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+    </button>
   </header>
+  <p class="lead">배율은 20분 동안 뽑아야 할 이상적인 딜량(%)입니다. 실제 기록을 넣으면 그 이상치를 얼마나 따라갔는지, 그리고 어느 배율까지 20분 컷이 되는지 나옵니다.</p>
 
   <!-- 1. 내 기록 -->
   <section class="card" aria-labelledby="recTitle">
@@ -165,13 +165,13 @@
   <!-- 4. 파티 -->
   <section class="card" aria-labelledby="partyTitle">
     <h2 class="card-title" id="partyTitle">파티로 가면?</h2>
-    <p class="card-sub">배율은 20분 기준 보스 hp 대비 %라, 파티원 배율을 더한 값이 <b>합산 배율</b>입니다. 기준 컨트롤(02)로 합산 배율을 상대하면 어떻게 되는지 봅니다.</p>
+    <p class="card-sub">배율은 20분 기준 보스 hp 대비 %라, 파티원 배율을 더한 값이 <b>합산 배율</b>입니다. 목표 계산의 기준 컨트롤로 합산 배율을 상대하면 어떻게 되는지 봅니다.</p>
 
     <div class="party-head" aria-hidden="true"><span>파티원</span><span>배율</span><span>기여</span><span></span></div>
     <ul class="party-list" id="partyList"></ul>
     <div class="party-tools">
       <button type="button" class="btn ghost" id="partyAdd">+ 파티원 추가</button>
-      <button type="button" class="btn ghost" id="partyMine" title="01 내 기록의 배율을 첫 줄에 넣습니다">내 배율 넣기</button>
+      <button type="button" class="btn ghost" id="partyMine" title="내 기록의 배율을 첫 줄에 넣습니다">내 배율 넣기</button>
     </div>
     <div class="goal-out party-out" id="partyOut"></div>
   </section>

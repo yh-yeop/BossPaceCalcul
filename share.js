@@ -1,12 +1,12 @@
-// 결과 카드를 캔버스로 그려 PNG로 내보낸다.
+// 결과 카드를 캔버스로 그려 PNG로 내보낸다. 색은 화면 테마와 무관하게 메소 계산기 다크 팔레트로 고정.
 const C = {
-  ink: '#150F1E', panel: '#1F1730', line: '#2E2444',
-  text: '#EDE7F7', dim: '#A497C2', faint: '#6F6291',
-  gold: '#E8B75C', hp: '#E2574C', mint: '#4FD1A5', violet: '#8E7BE8',
+  ink: '#111112', panel: '#19191B', surface: '#232326', line: '#34343A',
+  text: '#EDEDEF', dim: '#A1A1A8', faint: '#8E8E96',
+  gold: '#E9B949', hp: '#F0709F', mint: '#4FD1AA', violet: '#9AA6F0',
 };
-const SANS = "'IBM Plex Sans KR', system-ui, sans-serif";
-const MONO = "'IBM Plex Mono', monospace";
-const DISPLAY = "'Black Han Sans', sans-serif";
+const SANS = '"Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+const MONO = SANS;
+const DISPLAY = SANS;
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -52,20 +52,18 @@ export async function renderCard(d) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, W, H);
 
-  // eyebrow
-  ctx.fillStyle = C.gold;
-  ctx.font = `500 26px ${MONO}`;
+  // 윗줄 (사이트 이름) + 구분선
+  ctx.fillStyle = C.dim;
+  ctx.font = `600 26px ${SANS}`;
   ctx.textBaseline = 'alphabetic';
-  const eb = '20분 기준 · 보스 페이스';
+  const eb = '배율 페이스 계산기';
   ctx.fillText(eb, P, P + 26);
   const ebW = ctx.measureText(eb).width;
-  const g = ctx.createLinearGradient(P + ebW + 20, 0, W - P, 0);
-  g.addColorStop(0, '#8A6C2E'); g.addColorStop(1, 'rgba(138,108,46,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(P + ebW + 20, P + 16, W - P * 2 - ebW - 20, 2);
+  ctx.fillStyle = C.line;
+  ctx.fillRect(P + ebW + 20, P + 17, W - P * 2 - ebW - 20, 2);
 
   // 제목
-  fitText(ctx, d.title, W - P * 2, 96, DISPLAY);
+  fitText(ctx, d.title, W - P * 2, 96, DISPLAY, '800');
   ctx.fillStyle = C.text;
   ctx.fillText(d.title, P, P + 170);
 
@@ -85,16 +83,13 @@ export async function renderCard(d) {
 
   ctx.save();
   roundRect(ctx, P, ty, tw, th, 14);
-  ctx.fillStyle = '#0F0A16';
+  ctx.fillStyle = C.surface;
   ctx.fill();
   ctx.clip();
   ctx.fillStyle = C.line;
   [25, 50, 75].forEach(p => ctx.fillRect(P + tw * p / 100, ty, 2, th));
   const fw = tw * d.myPct / 100;
-  const fg = ctx.createLinearGradient(P, 0, P + fw, 0);
-  const rgb = d.cleared ? '79,209,165' : '226,87,76';
-  fg.addColorStop(0, `rgba(${rgb},.25)`); fg.addColorStop(1, `rgba(${rgb},.5)`);
-  ctx.fillStyle = fg;
+  ctx.fillStyle = d.cleared ? 'rgba(79,209,170,.35)' : 'rgba(240,112,159,.32)';
   ctx.fillRect(P, ty, fw, th);
   ctx.fillStyle = d.cleared ? C.mint : C.hp;
   ctx.fillRect(P + fw - 4, ty, 4, th);
@@ -111,26 +106,21 @@ export async function renderCard(d) {
   // 스탯 박스
   const by = ty + th + 90, bh = 250, gap = 28, bw = (W - P * 2 - gap) / 2;
   const boxes = [
-    { label: '배율 대비 컨트롤', value: d.ctrl, unit: '%', bar: C.violet },
-    { label: '20분 컷 최소 배율', value: d.minRatio, unit: '', bar: C.gold },
+    { label: '배율 대비 컨트롤', value: d.ctrl, unit: '%', color: C.text },
+    { label: '20분 컷 최소 배율', value: d.minRatio, unit: '', color: C.gold },
   ];
   boxes.forEach((b, i) => {
     const x = P + i * (bw + gap);
-    ctx.save();
     roundRect(ctx, x, by, bw, bh, 24);
     ctx.fillStyle = C.panel;
     ctx.fill();
-    ctx.clip();
-    ctx.fillStyle = b.bar;
-    ctx.fillRect(x, by, 6, bh);
-    ctx.restore();
 
     ctx.fillStyle = C.dim;
     ctx.font = `500 28px ${SANS}`;
     ctx.fillText(b.label, x + 40, by + 66);
 
-    const vs = fitText(ctx, b.value, bw - 110, 96, MONO, '600');
-    ctx.fillStyle = C.text;
+    const vs = fitText(ctx, b.value, bw - 110, 96, MONO, '700');
+    ctx.fillStyle = b.color;
     ctx.fillText(b.value, x + 40, by + 190);
     if (b.unit) {
       const vw = ctx.measureText(b.value).width;
